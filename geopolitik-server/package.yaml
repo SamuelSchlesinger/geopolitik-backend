@@ -1,6 +1,6 @@
 _common: !include "../shared.yaml"
 
-name: package
+name: geopolitik-server
 <<: *common
 
 dependencies:
@@ -18,7 +18,7 @@ executables:
     main: Main.hs
     source-dirs: app
     dependencies:
-      - package
+      - geopolitik-server
     <<: *executable
 
 tests:
@@ -26,5 +26,5 @@ tests:
     main: Test.hs
     source-dirs: test
     dependencies:
-      - package
+      - geopolitik-server
     <<: *test

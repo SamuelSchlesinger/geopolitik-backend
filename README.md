@@ -1,4 +1,5 @@
-# Example Project
+# Geopolitik
 
-This is an example multi-package [stack](https://docs.haskellstack.org/en/stable/README/) project,
-so that I don't have to recreate this every time I want to make a new one.
+Geopolitik is a website for people to publish their articles on topics
+relating to geopolitics. This can include news, culture, sports, economics,
+business, geography.
