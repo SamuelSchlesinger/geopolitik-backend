@@ -1,6 +1,6 @@
 _common: !include "../shared.yaml"
 
-name: geopolitik-server
+name: geopolitik-api
 <<: *common
 
 dependencies:
@@ -10,6 +10,12 @@ library:
   source-dirs:
     - src
   dependencies:
+    - unordered-containers
+    - postgresql-simple
+    - hashable
+    - bytestring
+    - text
+    - time
     - base
   <<: *library
 
@@ -18,7 +24,7 @@ executables:
     main: Main.hs
     source-dirs: app
     dependencies:
-      - geopolitik-server
+      - geopolitik-api
     <<: *executable
 
 tests:
@@ -26,5 +32,5 @@ tests:
     main: Test.hs
     source-dirs: test
     dependencies:
-      - geopolitik-server
+      - geopolitik-api
     <<: *test

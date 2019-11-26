@@ -1,4 +1,3 @@
 resolver: nightly-2019-10-27
 packages:
-- ./geopolitik-server
-- ./geopolitik-api
+- ./geopolitik
