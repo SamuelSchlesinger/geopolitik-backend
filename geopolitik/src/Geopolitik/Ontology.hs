@@ -16,7 +16,7 @@ newtype Key a = Key { getKey :: Text }
 data User = User
   { userID :: Key User
   , username :: Text
-  , password :: ByteString 
+  , password :: Text
   , userCreationDate :: UTCTime 
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow)
@@ -24,7 +24,7 @@ data User = User
 data Article = Article
   { articleID :: Key Article
   , articleName :: Text
-  , articleAuthor :: Key User
+  , articleOwner :: Key User
   , articleCreationDate :: UTCTime 
   } deriving stock (Generic, Eq, Show, Read, Ord) 
     deriving anyclass (FromRow, ToRow)
@@ -33,6 +33,15 @@ data Draft = Draft
   { draftID :: Key Draft
   , draftArticle :: Key Article
   , draftContents :: Text
+  , draftAuthor :: Key User
   , draftCreationDate :: UTCTime 
+  } deriving stock (Generic, Eq, Show, Read, Ord)
+    deriving anyclass (FromRow, ToRow)
+
+data Session = Session
+  { sessionID :: Key Session
+  , sessionOwner :: Key User 
+  , sessionCreationDate :: UTCTime
+  , sessionData :: ByteString
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow)

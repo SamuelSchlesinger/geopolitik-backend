@@ -1,5 +1,6 @@
 module Geopolitik.Database where
 
+import Data.ByteString (ByteString)
 import Geopolitik.Ontology
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
@@ -8,6 +9,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Reader (ReaderT(..))
 import Control.Monad.Reader.Class
 import Control.Monad.Catch
+import Data.Text (Text)
 
 runTestDatabaseT :: (MonadIO m, MonadMask m) => DatabaseT m a -> m a
 runTestDatabaseT (DatabaseT (ReaderT r)) = bracket getConnection (liftIO . close) r where
@@ -18,6 +20,9 @@ runTestDatabaseT (DatabaseT (ReaderT r)) = bracket getConnection (liftIO . close
     , connectPassword = ""
     , connectDatabase = "geopolitik"
     }
+
+runDatabaseT :: (MonadIO m, MonadMask m) => ConnectInfo -> DatabaseT m a -> m a
+runDatabaseT i (DatabaseT (ReaderT r)) = bracket (liftIO $ connect i) (liftIO . close) r
 
 newtype DatabaseT m a = DatabaseT { unDatabaseT :: ReaderT Connection m a }
   deriving newtype (MonadReader Connection, Monad, Functor, Applicative, MonadIO, MonadTrans, MonadMask, MonadThrow, MonadCatch)
@@ -36,7 +41,7 @@ insertArticles articles = do
   void . liftIO $ executeMany c [sql|
     insert into articles (id, name, author, creation_date)
     values (?, ?, ?, ?);
-   |] ((\Article{..} -> (articleID, articleName, articleAuthor, articleCreationDate)) <$> articles)
+   |] ((\Article{..} -> (articleID, articleName, articleOwner, articleCreationDate)) <$> articles)
 
 insertDrafts :: MonadIO m => [Draft] -> DatabaseT m ()
 insertDrafts drafts = do
@@ -44,14 +49,58 @@ insertDrafts drafts = do
   void . liftIO $ executeMany c [sql|
     insert into drafts (id, article, contents, creation_date)
     values (?, ?, ?, ?);
-   |] ((\Draft{..} -> (draftID, draftArticle, draftContents, draftCreationDate)) <$> drafts)
+   |] ((\Draft{..} -> 
+      (draftID, draftArticle, draftContents, draftCreationDate)) 
+      <$> drafts)
 
+insertSessions :: MonadIO m => [Session] -> DatabaseT m ()
+insertSessions sessions = do
+  c <- ask
+  void . liftIO $ executeMany c [sql|
+    insert into sessions (id, owner, creation_date)
+    values (?, ?, ?);
+    |] ((\Session{..} -> 
+       (sessionID, sessionOwner, sessionCreationDate)) 
+       <$> sessions)
+
+lookupSessionByData :: MonadIO m => ByteString -> DatabaseT m (Maybe Session)
+lookupSessionByData data_ = do
+  c <- ask
+  liftIO $ query c [sql|
+     select * from sessions 
+     where sessions.data in ?;
+    |] (Only (In [data_])) >>= \case
+    [s] -> return (Just s)
+    []  -> return Nothing
+    _   -> error "database has two sessions with the same data_"
+
+validateToken :: Connection -> ByteString -> DatabaseT m (Maybe User)
+validateToken conn token = do
+  c <- ask
+  liftIO $ query c [sql|
+    select * from users
+    inner join sessions on sessions.owner
+    where sessions.data in ?
+    and sessions.creation_date between current_time_stamp() - interval '1 hour' AND current_time_stamp();
+    |] >>= \case
+      [] -> return Nothing
+      [s] -> return (Just s)
+      _ -> error "database has two sessions with the same data_"
+      
+      
 lookupUsers :: MonadIO m => [Key User] -> DatabaseT m [User]
 lookupUsers users = do
   c <- ask
   liftIO $ query c [sql|
      select * from users where id in ?;
     |] (Only (In users))
+
+lookupUsersByUsername :: MonadIO m => [Text] -> DatabaseT m [User]
+lookupUsersByUsername usernames = do
+  c <- ask
+  liftIO $ query c [sql|
+     select * from users where username in ?;
+    |] (Only (In usernames))
 
 lookupArticles :: MonadIO m => [Key Article] -> DatabaseT m [Article]
 lookupArticles articles = do

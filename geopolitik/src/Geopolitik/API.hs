@@ -1,16 +1,22 @@
 module Geopolitik.API where
 
 import Servant
+import Servant.Server.Experimental.Auth
 import Data.Text (Text)
 import Geopolitik.Ontology
 import Data.Time.Clock (UTCTime)
+import qualified Network.Wai as Wai
 
-type GeopolitikAPI = "account" :> AccountAPI :<|> "article" :>  ArticleAPI
+type Ctx = AuthHandler Wai.Request User ': '[]
+
+type GeopolitikAPI = "account" :> AccountAPI :<|> "article" :> ArticleAPI
 
 data family Response a
 
 type family Request b where
   Request (Response a) = a
+
+type instance AuthServerData (AuthProtect "user") = User
 
 type P req = ReqBody '[JSON] req :> Post '[JSON] (Response req)
 
@@ -19,8 +25,9 @@ type G t req = Capture t req :> Get '[JSON] (Response req)
 type AccountAPI = "signup" :> P SignUp
              :<|> "signin" :> P SignIn
 
-type ArticleAPI = "new"    :> P NewArticle
-             :<|> "draft"  :> DraftAPI 
+type ArticleAPI = AuthProtect "user" :> 
+                ( "new"    :> P NewArticle
+             :<|> "draft"  :> DraftAPI ) 
              
 type DraftAPI = "new"      :> P NewDraft
            :<|> "latest"   :> G "article-key" LatestDraft
@@ -38,8 +45,7 @@ data SignIn = SignIn
 data instance Response SignIn = SignedIn | SignInFailure
 
 data NewArticle = NewArticle
-  { newArticleName :: Text
-  , newArticleAuthor :: Key User }
+  { newArticleName :: Text }
 
 data instance Response NewArticle = ArticleCreated | ArticleCreationFailure
 

@@ -10,6 +10,10 @@ library:
   source-dirs:
     - src
   dependencies:
+    - cookie
+    - wai
+    - random
+    - uuid
     - exceptions
     - servant-server
     - mtl
