@@ -10,6 +10,7 @@ library:
   source-dirs:
     - src
   dependencies:
+    - exceptions
     - servant-server
     - mtl
     - transformers
@@ -27,6 +28,9 @@ executables:
     main: Migrate.hs
     source-dirs: app
     dependencies:
+      - transformers
+      - mtl
+      - exceptions
       - time
       - text
       - bytestring

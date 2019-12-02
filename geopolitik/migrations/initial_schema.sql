@@ -12,7 +12,7 @@ create table articles (
   creation_date timestamp with time zone not null
 );
 
-create table draft (
+create table drafts (
   id text primary key unique not null,
   article text not null references articles(id) on delete cascade,
   contents text not null,

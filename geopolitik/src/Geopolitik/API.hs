@@ -12,14 +12,18 @@ data family Response a
 type family Request b where
   Request (Response a) = a
 
-type SimplePost req res = ReqBody '[JSON] req :> Post '[JSON] res
+type P req = ReqBody '[JSON] req :> Post '[JSON] (Response req)
 
-type AccountAPI = "signup" :> SimplePost SignUp (Response SignUp)
-             :<|> "signin" :> SimplePost SignIn (Response SignIn)
+type G t req = Capture t req :> Get '[JSON] (Response req) 
 
-type ArticleAPI = "new"    :> SimplePost NewArticle (Response NewArticle)
-             :<|> "draft"  :> SimplePost NewDraft (Response NewDraft)
-             :<|> "latest" :> Capture "article-key" LatestDraft :> Get '[JSON] (Response LatestDraft)
+type AccountAPI = "signup" :> P SignUp
+             :<|> "signin" :> P SignIn
+
+type ArticleAPI = "new"    :> P NewArticle
+             :<|> "draft"  :> DraftAPI 
+             
+type DraftAPI = "new"      :> P NewDraft
+           :<|> "latest"   :> G "article-key" LatestDraft
   
 data SignUp = SignUp 
   { signUpUsername :: Text
