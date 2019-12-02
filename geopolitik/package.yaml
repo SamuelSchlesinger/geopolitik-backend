@@ -10,6 +10,8 @@ library:
   source-dirs:
     - src
   dependencies:
+    - warp
+    - aeson
     - cookie
     - wai
     - random
@@ -28,17 +30,10 @@ library:
   <<: *library
 
 executables:
-  migrate:
-    main: Migrate.hs
+  geopolitik:
+    main: Entry.hs
     source-dirs: app
     dependencies:
-      - transformers
-      - mtl
-      - exceptions
-      - time
-      - text
-      - bytestring
-      - postgresql-simple
       - geopolitik
     <<: *executable
 

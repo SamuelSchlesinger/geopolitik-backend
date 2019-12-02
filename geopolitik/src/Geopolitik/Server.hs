@@ -29,9 +29,10 @@ ctx conn = mkAuthHandler validate :. EmptyContext where
       $ lookup "cookie" (Wai.requestHeaders req)
     token <- maybe (throwError err403) return
       $ lookup "servant-auth-cookie" $ parseCookies cookie
-    runDatabaseT conn $ do
-      Session{..} <- lookupSessionByData token
-    _
+    runSharedDatabaseT conn (validateToken token) >>= \case
+      Just user -> return user
+      Nothing -> throwError err401
+    
     
 
 server :: ServerT GeopolitikAPI M

@@ -24,6 +24,9 @@ runTestDatabaseT (DatabaseT (ReaderT r)) = bracket getConnection (liftIO . close
 runDatabaseT :: (MonadIO m, MonadMask m) => ConnectInfo -> DatabaseT m a -> m a
 runDatabaseT i (DatabaseT (ReaderT r)) = bracket (liftIO $ connect i) (liftIO . close) r
 
+runSharedDatabaseT :: (MonadIO m, MonadMask m) => Connection -> DatabaseT m a -> m a
+runSharedDatabaseT i (DatabaseT (ReaderT r)) = r i
+
 newtype DatabaseT m a = DatabaseT { unDatabaseT :: ReaderT Connection m a }
   deriving newtype (MonadReader Connection, Monad, Functor, Applicative, MonadIO, MonadTrans, MonadMask, MonadThrow, MonadCatch)
 
@@ -74,15 +77,15 @@ lookupSessionByData data_ = do
     []  -> return Nothing
     _   -> error "database has two sessions with the same data_"
 
-validateToken :: Connection -> ByteString -> DatabaseT m (Maybe User)
-validateToken conn token = do
+validateToken :: MonadIO m => ByteString -> DatabaseT m (Maybe User)
+validateToken token = do
   c <- ask
-  liftIO $ query c [sql|
+  (liftIO $ query c [sql|
     select * from users
     inner join sessions on sessions.owner
     where sessions.data in ?
     and sessions.creation_date between current_time_stamp() - interval '1 hour' AND current_time_stamp();
-    |] >>= \case
+    |] (Only (In [token]))) >>= \case
       [] -> return Nothing
       [s] -> return (Just s)
       _ -> error "database has two sessions with the same data_"
