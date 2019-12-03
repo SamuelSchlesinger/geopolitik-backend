@@ -10,6 +10,7 @@ library:
   source-dirs:
     - src
   dependencies:
+    - cryptonite
     - warp
     - aeson
     - cookie

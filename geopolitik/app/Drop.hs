@@ -15,5 +15,6 @@ main = runDatabaseT testInfo do
      drop table articles cascade;
      drop table drafts cascade;
      drop table sessions;
+     drop table links;
     |]
 

@@ -7,6 +7,7 @@ import Database.PostgreSQL.Simple.FromField
 import Data.Aeson (FromJSON(..), ToJSON(..), fromJSON, Result(Success))
 import Geopolitik.Ontology
 import Data.Text (Text, pack)
+import Data.Void
 
 data Tag a where
   ArticleTag :: Tag Article
@@ -49,6 +50,12 @@ data Link a = Link
   { linkID :: Key (Link a)
   , linkTag :: SomeTag
   , linkArticle :: Key Article 
-  , linkEntity :: Text }
+  , linkEntity :: Key Void }
   deriving stock (Generic)
   deriving anyclass (FromJSON, ToJSON)
+
+absurd :: Key a -> Key Void
+absurd (Key a) = Key a
+
+obvious :: Tag a -> Key Void -> Key a
+obvious _ (Key a) = Key a

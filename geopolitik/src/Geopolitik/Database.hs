@@ -13,6 +13,7 @@ import Control.Monad.Reader.Class
 import Control.Monad.Catch
 import Data.Text (Text)
 import Control.Monad.Except
+import Geopolitik.Tag
 
 testInfo :: ConnectInfo
 testInfo = ConnectInfo { 
@@ -86,6 +87,14 @@ insertExecutedMigrations executedMigrations = do
      (executedMigrationFilePath, executedMigrationTimestamp))
      <$> executedMigrations)
 
+insertLinks :: MonadIO m => [Link a] -> DatabaseT m ()
+insertLinks links = do
+  c <- ask
+  void . liftIO $ executeMany c [sql|
+    insert into links
+    values (?, ?, ?, ?);
+  |] ((\Link{..} -> (linkID, linkTag, linkArticle, linkEntity)) <$> links)
+
 validateToken :: MonadIO m => ByteString -> DatabaseT m (Maybe User)
 validateToken token = do
   c <- ask
@@ -99,10 +108,8 @@ validateToken token = do
     where sessions.creation_date between ? and ?
     |] (token, past, present)) >>= \case
       [] -> do
-        liftIO $ putStrLn "Could not find a user corresponding to this token"
         return Nothing
       [s] -> do
-        liftIO $ putStrLn "Found a user corresponding to this token" 
         return (Just s)
       _ -> error "database has two sessions with the same token" 
       

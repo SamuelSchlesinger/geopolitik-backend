@@ -38,6 +38,7 @@ type AccountAPI = "signup" :> P SignUp
 
 type ArticleAPI = AuthProtect "geopolitik-user" :> 
                 ( "new"    :> P NewArticle
+             :<|> "link"   :> P LinkArticle
              :<|> "draft"  :> DraftAPI ) 
              
 type DraftAPI = "new"      :> P NewDraft
@@ -86,5 +87,15 @@ newtype LatestDraft = LatestDraft { unLatestDraft :: Key Article }
   deriving newtype (Eq, Ord, Show, Read, FromJSON, ToJSON, FromHttpApiData)
 
 data instance Response LatestDraft = LatestDraftFound (Key Draft) (Key User) Text UTCTime | LatestDraftNotFound
+  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data LinkArticle = LinkArticle
+  { linkArticleFrom :: Key Article
+  , linkArticleTo :: Key Article 
+  } deriving stock (Eq, Ord, Show, Read, Generic)
+    deriving anyclass (FromJSON, ToJSON)
+
+data instance Response LinkArticle = LinkedArticles | LinkArticleFailure
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)

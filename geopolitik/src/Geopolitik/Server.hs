@@ -14,6 +14,7 @@ import System.Random
 import qualified Network.Wai as Wai
 import Database.PostgreSQL.Simple hiding ((:.))
 import Web.Cookie
+import Geopolitik.Tag
 
 type M = DatabaseT Handler
 
@@ -31,7 +32,6 @@ ctx conn = mkAuthHandler validate :. EmptyContext where
       $ lookup "cookie" (Wai.requestHeaders req)
     token <- maybe (throwError err403) return
       $ lookup "geopolitik-user" $ parseCookies cookie
-    liftIO $ print token
     maybe (throwError err401) return =<< runSharedDatabaseT conn (validateToken token) 
 
 server :: ServerT GeopolitikAPI M
@@ -73,7 +73,7 @@ newToken User{..} = do
   fmap (fmap (const ())) $ signin $ SignIn username password
 
 article :: ServerT ArticleAPI M
-article user = newArticle user :<|> draft user
+article user = newArticle user :<|> link user :<|> draft user
 
 newArticle :: User -> NewArticle -> DatabaseT Handler (Response NewArticle)
 newArticle User{userID = articleOwner} (NewArticle articleName) = do
@@ -81,6 +81,20 @@ newArticle User{userID = articleOwner} (NewArticle articleName) = do
   articleID <- liftIO ((Key . toText) <$> randomIO) 
   insertArticles [Article{..}]
   return ArticleCreated
+
+link :: User -> LinkArticle -> DatabaseT Handler (Response LinkArticle)
+link User{..} (LinkArticle linkArticle linkEntity') = do
+  lookupArticles [linkArticle] >>= \case
+    [Article{articleOwner}] -> 
+      if userID == articleOwner 
+        then do
+          linkID <- liftIO ((Key . toText) <$> randomIO)
+          let linkTag = SomeTag ArticleTag
+          let linkEntity = absurd linkEntity'
+          insertLinks [Link{..}] 
+          return LinkedArticles
+        else return LinkArticleFailure
+    _ -> return LinkArticleFailure
 
 draft :: User -> ServerT DraftAPI M
 draft user = newDraft user :<|> latest user :<|> latest' user
