@@ -7,12 +7,12 @@ import Geopolitik.API
 import Servant
 import Servant.Server.Experimental.Auth
 import Data.Time.Clock
+import Data.Text.Encoding
 import Data.UUID
 import System.Random
 import qualified Network.Wai as Wai
 import Database.PostgreSQL.Simple hiding ((:.))
 import Web.Cookie
-import Control.Monad
 
 type M = DatabaseT Handler
 
@@ -29,12 +29,10 @@ ctx conn = mkAuthHandler validate :. EmptyContext where
     cookie <- maybe (throwError err403) return 
       $ lookup "cookie" (Wai.requestHeaders req)
     token <- maybe (throwError err403) return
-      $ lookup "servant-auth-cookie" $ parseCookies cookie
+      $ lookup "geopolitik-user" $ parseCookies cookie
     runSharedDatabaseT conn (validateToken token) >>= \case
       Just user -> return user
-      Nothing -> throwError err401
-    
-    
+      Nothing -> throwError err401     
 
 server :: ServerT GeopolitikAPI M
 server = account :<|> article 
@@ -62,9 +60,9 @@ signin (SignIn username password)
           sessionID <- liftIO ((Key . toText) <$> randomIO) 
           let sess = Session{..}
           insertSessions [sess]
-          return undefined
+          return $ addHeader (def { setCookieName = "geopolitik-user", setCookieValue = encodeUtf8 sessionToken }) SignedIn 
         else throwError err403
-      _ -> return undefined
+      _ -> throwError err403
 
 article :: ServerT ArticleAPI M
 article user = newArticle user :<|> draft user
