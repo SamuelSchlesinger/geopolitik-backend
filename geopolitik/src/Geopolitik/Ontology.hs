@@ -1,3 +1,5 @@
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DeriveAnyClass #-}
 module Geopolitik.Ontology where
 
@@ -8,7 +10,7 @@ import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
 import Data.Aeson (ToJSON, FromJSON)
-import Servant
+import Servant hiding (Link)
 
 newtype Key a = Key { getKey :: Text }
   deriving newtype (FromHttpApiData, Eq, Show, Read, Ord, FromField, ToField, ToJSON, FromJSON)
@@ -52,8 +54,31 @@ data ExecutedMigration = ExecutedMigration
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow, ToJSON, FromJSON) 
 
-data Link a = Link (Tag a) (Key Article) (Key a)
+class ( Show (Tag a)
+      , Read (Tag a)
+      , Ord (Tag a)
+      , Generic (Tag a)
+      , FromRow a
+      , ToRow a
+      , ToField (Tag a)
+      , FromField (Tag a)
+      , ToJSON (Tag a)
+      , FromJSON (Tag a)) => ArticleTag a where
+  data Tag a
+  tagTable :: Query
 
-data family Tag a
+data Link a = Link 
+  { linkID :: Key (Link a)
+  , linkTag :: Tag a
+  , linkArticle :: Key Article 
+  , linkEntity :: Key a }
 
-
+deriving instance ArticleTag a => Generic (Link a)
+deriving instance ArticleTag a => Eq (Link a)
+deriving instance ArticleTag a => Show (Link a)
+deriving instance ArticleTag a => Read (Link a)
+deriving instance ArticleTag a => Ord (Link a)
+deriving instance ArticleTag a => FromRow (Link a)
+deriving instance ArticleTag a => ToRow (Link a)
+deriving instance ArticleTag a => ToJSON (Link a)
+deriving instance ArticleTag a => FromJSON (Link a)
