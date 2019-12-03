@@ -83,16 +83,17 @@ newArticle User{userID = articleOwner} (NewArticle articleName) = do
   return ArticleCreated
 
 link :: User -> LinkArticle -> DatabaseT Handler (Response LinkArticle)
-link User{..} (LinkArticle linkArticle linkEntity') = do
+link User{..} (LinkArticle linkArticle (SomeTag tag) linkEntity') = do
   lookupArticles [linkArticle] >>= \case
     [Article{articleOwner}] -> 
       if userID == articleOwner 
-        then do
-          linkID <- liftIO ((Key . toText) <$> randomIO)
-          let linkTag = SomeTag ArticleTag
-          let linkEntity = absurd linkEntity'
-          insertLinks [Link{..}] 
-          return LinkedArticles
+        then case tag of
+          ArticleTag -> do
+            linkID <- liftIO ((Key . toText) <$> randomIO)
+            let linkTag = SomeTag ArticleTag
+            let linkEntity = absurd linkEntity'
+            insertLinks [Link{..}] 
+            return LinkedArticles
         else return LinkArticleFailure
     _ -> return LinkArticleFailure
 

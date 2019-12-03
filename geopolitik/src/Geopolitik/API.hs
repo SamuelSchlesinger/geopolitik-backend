@@ -5,6 +5,8 @@ import Servant
 import Servant.Server.Experimental.Auth
 import Data.Text (Text)
 import Geopolitik.Ontology
+import Geopolitik.Tag
+import Data.Void
 import Data.Time.Clock (UTCTime)
 import qualified Network.Wai as Wai
 import Data.Aeson (ToJSON, FromJSON)
@@ -92,8 +94,9 @@ data instance Response LatestDraft = LatestDraftFound (Key Draft) (Key User) Tex
 
 data LinkArticle = LinkArticle
   { linkArticleFrom :: Key Article
-  , linkArticleTo :: Key Article 
-  } deriving stock (Eq, Ord, Show, Read, Generic)
+  , linkArticleTag :: SomeTag
+  , linkArticleTo :: Key Void 
+  } deriving stock (Eq, Show, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
 data instance Response LinkArticle = LinkedArticles | LinkArticleFailure

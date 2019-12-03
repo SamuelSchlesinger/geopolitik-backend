@@ -10,6 +10,7 @@ library:
   source-dirs:
     - src
   dependencies:
+    - servant-docs
     - cryptonite
     - warp
     - aeson
@@ -58,6 +59,17 @@ executables:
       - geopolitik
       - base
     <<: *executable
+  apidocs:
+    main: 'app/Docs.hs'
+    dependencies:
+      - cookie
+      - servant-server
+      - time
+      - text
+      - geopolitik
+      - base
+      - servant-docs
+      - servant
 
 tests:
   test:

@@ -18,9 +18,9 @@ deriving instance Show (Tag a)
 
 data SomeTag = forall a. SomeTag (Tag a) 
 
--- TODO put all of the tags here, this todo lives forever
-tags :: [SomeTag]
-tags = [SomeTag ArticleTag]
+-- AlWAYS put all of the tags here, this todo lives forever
+allTags :: [SomeTag]
+allTags = [SomeTag ArticleTag]
 
 instance Show SomeTag where
   show (SomeTag ArticleTag) = "Article"
@@ -34,7 +34,7 @@ instance ToField SomeTag where
 instance FromField SomeTag where
   fromField field bs = do
     tag <- fromField field bs
-    case [ SomeTag tag' | SomeTag tag' <- tags, tag == pack (show tag') ] of
+    case [ SomeTag tag' | SomeTag tag' <- allTags, tag == pack (show tag') ] of
       x : [] -> return x
       _ -> conversionError (userError "reee")
 
@@ -42,7 +42,7 @@ instance ToJSON SomeTag where
   toJSON (SomeTag tag) = toJSON (show tag)
 
 instance FromJSON SomeTag where
-  parseJSON a = case [ SomeTag tag' | SomeTag tag' <- tags, fromJSON a == Success (toJSON (show tag')) ] of
+  parseJSON a = case [ SomeTag tag' | SomeTag tag' <- allTags, fromJSON a == Success (toJSON (show tag')) ] of
     x : [] -> return x
     _ -> fail "reeeee"
 
