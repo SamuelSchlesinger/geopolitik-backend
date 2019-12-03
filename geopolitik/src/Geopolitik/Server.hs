@@ -60,7 +60,10 @@ signin (SignIn username password)
           sessionID <- liftIO ((Key . toText) <$> randomIO) 
           let sess = Session{..}
           insertSessions [sess]
-          return $ addHeader (def { setCookieName = "geopolitik-user", setCookieValue = encodeUtf8 sessionToken }) SignedIn 
+          return $ addHeader (def 
+                   { setCookieName = "geopolitik-user"
+                   , setCookieValue = encodeUtf8 sessionToken }) 
+                   SignedIn 
         else throwError err403
       _ -> throwError err403
 

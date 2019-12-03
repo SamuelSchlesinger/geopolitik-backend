@@ -72,10 +72,10 @@ insertSessions :: MonadIO m => [Session] -> DatabaseT m ()
 insertSessions sessions = do
   c <- ask
   void . liftIO $ executeMany c [sql|
-    insert into sessions (id, owner, creation_date)
-    values (?, ?, ?);
+    insert into sessions (id, owner, creation_date, token)
+    values (?, ?, ?, ?);
     |] ((\Session{..} -> 
-       (sessionID, sessionOwner, sessionCreationDate)) 
+       (sessionID, sessionOwner, sessionCreationDate, sessionToken)) 
        <$> sessions)
 
 insertExecutedMigrations :: MonadIO m => [ExecutedMigration] -> DatabaseT m ()
@@ -93,6 +93,7 @@ validateToken token = do
   c <- ask
   present <- liftIO getCurrentTime
   let past = addUTCTime (secondsToNominalDiffTime (-30 * 60)) present
+  liftIO $ print token
   (liftIO $ query c [sql|
     select * 
     from users

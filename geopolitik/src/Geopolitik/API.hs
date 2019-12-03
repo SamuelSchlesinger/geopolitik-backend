@@ -22,11 +22,14 @@ type family Request b where
 
 type instance AuthServerData (AuthProtect "user") = User
 
-type P req = ReqBody '[JSON] req :> Post '[JSON] (Response req)
+type P req = ReqBody '[JSON] req 
+          :> Post '[JSON] (Response req)
 
-type G t req = Capture t req :> Get '[JSON] (Response req) 
+type G t req = Capture t req 
+            :> Get '[JSON] (Response req) 
 
-type C req = ReqBody '[JSON] req :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response req))
+type C req = ReqBody '[JSON] req 
+          :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response req))
 
 type AccountAPI = "signup" :> P SignUp
              :<|> "signin" :> C SignIn
