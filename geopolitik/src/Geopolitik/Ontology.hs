@@ -9,7 +9,7 @@ import GHC.Generics (Generic)
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
-import Data.Aeson (ToJSON, FromJSON)
+import Data.Aeson (ToJSON(..), FromJSON(..))
 import Servant hiding (Link)
 
 newtype Key a = Key { getKey :: Text }
@@ -53,32 +53,3 @@ data ExecutedMigration = ExecutedMigration
   , executedMigrationTimestamp :: UTCTime
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow, ToJSON, FromJSON) 
-
-class ( Show (Tag a)
-      , Read (Tag a)
-      , Ord (Tag a)
-      , Generic (Tag a)
-      , FromRow a
-      , ToRow a
-      , ToField (Tag a)
-      , FromField (Tag a)
-      , ToJSON (Tag a)
-      , FromJSON (Tag a)) => ArticleTag a where
-  data Tag a
-  tagTable :: Query
-
-data Link a = Link 
-  { linkID :: Key (Link a)
-  , linkTag :: Tag a
-  , linkArticle :: Key Article 
-  , linkEntity :: Key a }
-
-deriving instance ArticleTag a => Generic (Link a)
-deriving instance ArticleTag a => Eq (Link a)
-deriving instance ArticleTag a => Show (Link a)
-deriving instance ArticleTag a => Read (Link a)
-deriving instance ArticleTag a => Ord (Link a)
-deriving instance ArticleTag a => FromRow (Link a)
-deriving instance ArticleTag a => ToRow (Link a)
-deriving instance ArticleTag a => ToJSON (Link a)
-deriving instance ArticleTag a => FromJSON (Link a)
