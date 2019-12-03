@@ -1,5 +1,6 @@
 module Geopolitik.Server where
 
+import Data.Text (Text)
 import Geopolitik.Database
 import Geopolitik.Ontology
 import Control.Monad.Trans
@@ -31,9 +32,7 @@ ctx conn = mkAuthHandler validate :. EmptyContext where
     token <- maybe (throwError err403) return
       $ lookup "geopolitik-user" $ parseCookies cookie
     liftIO $ print token
-    runSharedDatabaseT conn (validateToken token) >>= \case
-      Just user -> return user
-      Nothing -> throwError err401     
+    maybe (throwError err401) return =<< runSharedDatabaseT conn (validateToken token) 
 
 server :: ServerT GeopolitikAPI M
 server = account :<|> article 
@@ -84,7 +83,7 @@ newArticle User{userID = articleOwner} (NewArticle articleName) = do
   return ArticleCreated
 
 draft :: User -> ServerT DraftAPI M
-draft user = newDraft user :<|> latest user
+draft user = newDraft user :<|> latest user :<|> latest' user
 
 newDraft :: User -> NewDraft -> M (Response NewDraft)
 newDraft u@User{userID = draftAuthor} (NewDraft draftArticle draftContents) = do
@@ -96,5 +95,11 @@ newDraft u@User{userID = draftAuthor} (NewDraft draftArticle draftContents) = do
 latest :: User -> LatestDraft -> M (Response LatestDraft)
 latest _ (LatestDraft articleKey) 
   = latestDraft articleKey >>= \case
+      Just (Draft draftID _ contents draftAuthor timestamp) -> return $ LatestDraftFound draftID draftAuthor contents timestamp
+      Nothing -> return LatestDraftNotFound
+
+latest' :: User -> Text -> Text -> M (Response LatestDraft)
+latest' _ username articleName
+  = latestDraft' username articleName >>= \case
       Just (Draft draftID _ contents draftAuthor timestamp) -> return $ LatestDraftFound draftID draftAuthor contents timestamp
       Nothing -> return LatestDraftNotFound

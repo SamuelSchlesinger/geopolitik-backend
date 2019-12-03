@@ -51,4 +51,9 @@ data ExecutedMigration = ExecutedMigration
   , executedMigrationTimestamp :: UTCTime
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow, ToJSON, FromJSON) 
-  
+
+data Link a = Link (Tag a) (Key Article) (Key a)
+
+data family Tag a
+
+

@@ -42,7 +42,8 @@ type ArticleAPI = AuthProtect "geopolitik-user" :>
              
 type DraftAPI = "new"      :> P NewDraft
            :<|> "latest"   :> G "article-key" LatestDraft
-  
+           :<|> Capture "username" Text :> Capture "article-name" Text :> Get '[JSON] (Response LatestDraft) 
+
 data SignUp = SignUp 
   { signUpUsername :: Text
   , signUpPassword :: Text }

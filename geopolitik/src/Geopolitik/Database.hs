@@ -155,6 +155,23 @@ latestDraft article = do
     [] -> return Nothing
     _ -> error "unacceptable state"
 
+latestDraft' :: MonadIO m => Text -> Text -> DatabaseT m (Maybe Draft)
+latestDraft' username articleName = do
+  c <- ask
+  x <- liftIO $ query c [sql|
+     select drafts.id, drafts.article, drafts.author, drafts.contents, drafts.creation_date from drafts
+     inner join articles on articles.id = drafts.article
+     inner join users on users.id = articles.owner
+     where users.username = ?
+       and articles.name = ?
+           order by drafts.creation_date desc
+           limit 1;
+    |] (username, articleName)
+  case x of
+    [a] -> return (Just a)
+    [] -> return Nothing
+    _ -> error "unacceptable state'"
+
 deleteUsers :: MonadIO m => [Key User] -> DatabaseT m Int
 deleteUsers users = do
   c <- ask

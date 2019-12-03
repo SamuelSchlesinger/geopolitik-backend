@@ -30,7 +30,7 @@ library:
   <<: *library
 
 executables:
-  psql-drop:
+  drop:
     main: 'app/Drop.hs'
     dependencies:
       - geopolitik
