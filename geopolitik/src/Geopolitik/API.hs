@@ -20,7 +20,7 @@ data family Response a
 type family Request b where
   Request (Response a) = a
 
-type instance AuthServerData (AuthProtect "user") = User
+type instance AuthServerData (AuthProtect "geopolitik-user") = User
 
 type P req = ReqBody '[JSON] req 
           :> Post '[JSON] (Response req)
@@ -33,8 +33,10 @@ type C req = ReqBody '[JSON] req
 
 type AccountAPI = "signup" :> P SignUp
              :<|> "signin" :> C SignIn
+             :<|> AuthProtect "geopolitik-user"
+                  :> ( "new-token" :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] ()))
 
-type ArticleAPI = AuthProtect "user" :> 
+type ArticleAPI = AuthProtect "geopolitik-user" :> 
                 ( "new"    :> P NewArticle
              :<|> "draft"  :> DraftAPI ) 
              

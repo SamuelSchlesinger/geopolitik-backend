@@ -23,6 +23,7 @@ main = runDatabaseT testInfo do
 
 runMigration :: FilePath -> DatabaseT IO ()
 runMigration filepath = do
+  liftIO $ putStrLn $ "Running migration " <> filepath
   fileLocation <- 
     (<> "/geopolitik/migrations/" <> filepath) 
       <$> liftIO (getEnv "GEOPOLITIK_LOCATION")

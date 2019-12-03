@@ -52,21 +52,19 @@ insertArticles :: MonadIO m => [Article] -> DatabaseT m ()
 insertArticles articles = do
   c <- ask
   void . liftIO $ executeMany c [sql|
-    insert into articles (id, name, author, creation_date)
+    insert into articles (id, name, owner, creation_date)
     values (?, ?, ?, ?);
    |] ((\Article{..} -> 
       (articleID, articleName, articleOwner, articleCreationDate)) 
       <$> articles)
 
-insertDrafts :: MonadIO m => [Draft] -> DatabaseT m ()
-insertDrafts drafts = do
+insertDraft :: MonadIO m => User -> Draft -> DatabaseT m ()
+insertDraft User{..} Draft{..} = do
   c <- ask
-  void . liftIO $ executeMany c [sql|
-    insert into drafts (id, article, contents, creation_date)
-    values (?, ?, ?, ?);
-   |] ((\Draft{..} -> 
-      (draftID, draftArticle, draftContents, draftCreationDate)) 
-      <$> drafts)
+  void . liftIO $ execute c [sql|
+    insert into drafts (id, article, author, contents, creation_date)
+    values (?, ?, ?, ?, ?);
+   |] (draftID, draftArticle, userID, draftContents, draftCreationDate)
 
 insertSessions :: MonadIO m => [Session] -> DatabaseT m ()
 insertSessions sessions = do
@@ -93,16 +91,19 @@ validateToken token = do
   c <- ask
   present <- liftIO getCurrentTime
   let past = addUTCTime (secondsToNominalDiffTime (-30 * 60)) present
-  liftIO $ print token
   (liftIO $ query c [sql|
-    select * 
+    select users.id, username, password, users.creation_date 
     from users
-    inner join sessions on sessions.owner=users.userID
-                        and sessions.token=?
-    where sessions.creation_time between ? and ?
+    inner join sessions on owner=users.id
+                        and token=?
+    where sessions.creation_date between ? and ?
     |] (token, past, present)) >>= \case
-      [] -> return Nothing
-      [s] -> return (Just s)
+      [] -> do
+        liftIO $ putStrLn "Could not find a user corresponding to this token"
+        return Nothing
+      [s] -> do
+        liftIO $ putStrLn "Found a user corresponding to this token" 
+        return (Just s)
       _ -> error "database has two sessions with the same token" 
       
 lookupUsers :: MonadIO m => [Key User] -> DatabaseT m [User]
@@ -182,7 +183,3 @@ withTestUsers users dbGo = bracket (insertUsers users) (const . void $ deleteUse
 withTestArticles :: (MonadIO m, MonadMask m) => [Article] -> ([Key Article] -> DatabaseT m a) -> DatabaseT m a
 withTestArticles articles dbGo = bracket (insertArticles articles) (const $ deleteArticles articleKeys) (const $ dbGo articleKeys) where
   articleKeys = map articleID articles
-
-withTestDrafts :: (MonadIO m, MonadMask m) => [Draft] -> ([Key Draft] -> DatabaseT m a) -> DatabaseT m a
-withTestDrafts drafts dbGo = bracket (insertDrafts drafts)  (const $ deleteDrafts draftKeys) (const $ dbGo draftKeys) where
-  draftKeys = map draftID drafts 

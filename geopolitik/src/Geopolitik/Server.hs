@@ -30,6 +30,7 @@ ctx conn = mkAuthHandler validate :. EmptyContext where
       $ lookup "cookie" (Wai.requestHeaders req)
     token <- maybe (throwError err403) return
       $ lookup "geopolitik-user" $ parseCookies cookie
+    liftIO $ print token
     runSharedDatabaseT conn (validateToken token) >>= \case
       Just user -> return user
       Nothing -> throwError err401     
@@ -38,7 +39,7 @@ server :: ServerT GeopolitikAPI M
 server = account :<|> article 
 
 account :: ServerT AccountAPI M
-account = signup :<|> signin
+account = signup :<|> signin :<|> newToken
 
 signup :: SignUp -> M (Response SignUp)
 signup (SignUp username password) 
@@ -62,10 +63,15 @@ signin (SignIn username password)
           insertSessions [sess]
           return $ addHeader (def 
                    { setCookieName = "geopolitik-user"
+                   , setCookieMaxAge = Just (60 * 30)
                    , setCookieValue = encodeUtf8 sessionToken }) 
                    SignedIn 
         else throwError err403
       _ -> throwError err403
+
+newToken :: User -> M (Headers '[Header "Set-Cookie" SetCookie] ())
+newToken User{..} = do
+  fmap (fmap (const ())) $ signin $ SignIn username password
 
 article :: ServerT ArticleAPI M
 article user = newArticle user :<|> draft user
@@ -81,10 +87,10 @@ draft :: User -> ServerT DraftAPI M
 draft user = newDraft user :<|> latest user
 
 newDraft :: User -> NewDraft -> M (Response NewDraft)
-newDraft User{userID = draftAuthor} (NewDraft draftArticle draftContents) = do
+newDraft u@User{userID = draftAuthor} (NewDraft draftArticle draftContents) = do
   draftCreationDate <- liftIO getCurrentTime
   draftID <- liftIO ((Key . toText) <$> randomIO)
-  insertDrafts [Draft{..}]
+  insertDraft u Draft{..}
   return DraftCreated
 
 latest :: User -> LatestDraft -> M (Response LatestDraft)
