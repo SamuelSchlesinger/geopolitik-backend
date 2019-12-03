@@ -8,7 +8,8 @@ import Geopolitik.Ontology
 import Data.Time.Clock (UTCTime)
 import qualified Network.Wai as Wai
 import Data.Aeson (ToJSON, FromJSON)
-import GHC.Generics
+import GHC.Generics (Generic)
+import Web.Cookie
 
 type Ctx = AuthHandler Wai.Request User ': '[]
 
@@ -25,8 +26,10 @@ type P req = ReqBody '[JSON] req :> Post '[JSON] (Response req)
 
 type G t req = Capture t req :> Get '[JSON] (Response req) 
 
+type C req = ReqBody '[JSON] req :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response req))
+
 type AccountAPI = "signup" :> P SignUp
-             :<|> "signin" :> P SignIn
+             :<|> "signin" :> C SignIn
 
 type ArticleAPI = AuthProtect "user" :> 
                 ( "new"    :> P NewArticle

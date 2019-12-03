@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module Geopolitik.Database where
 
 import Data.Time.Clock
@@ -11,6 +12,7 @@ import Control.Monad.Trans.Reader (ReaderT(..))
 import Control.Monad.Reader.Class
 import Control.Monad.Catch
 import Data.Text (Text)
+import Control.Monad.Except
 
 testInfo :: ConnectInfo
 testInfo = ConnectInfo { 
@@ -33,6 +35,10 @@ runSharedDatabaseT i (DatabaseT (ReaderT r)) = r i
 
 newtype DatabaseT m a = DatabaseT { unDatabaseT :: ReaderT Connection m a }
   deriving newtype (MonadReader Connection, Monad, Functor, Applicative, MonadIO, MonadTrans, MonadMask, MonadThrow, MonadCatch)
+
+instance (MonadError e m, MonadCatch m, Exception e) => MonadError e (DatabaseT m) where
+  throwError = lift . throwError
+  catchError a f = catch a f
 
 insertUsers :: MonadIO m => [User] -> DatabaseT m ()
 insertUsers users = do

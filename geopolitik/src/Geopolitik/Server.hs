@@ -12,6 +12,7 @@ import System.Random
 import qualified Network.Wai as Wai
 import Database.PostgreSQL.Simple hiding ((:.))
 import Web.Cookie
+import Control.Monad
 
 type M = DatabaseT Handler
 
@@ -51,13 +52,19 @@ signup (SignUp username password)
         return SignedUp
       _ -> return SignUpFailure
 
-signin :: SignIn -> M (Response SignIn)
-signin (SignIn username _password)
+signin :: SignIn -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
+signin (SignIn username password)
   = lookupUsersByUsername [username] >>= \case
-      [User{}] -> do
-        -- TODO fiddle with some sessions table 
-        return SignedIn
-      _ -> return SignInFailure
+      [User{userID = sessionOwner, password = userPassword}] -> do
+        if (password == userPassword) then do
+          sessionCreationDate <- liftIO getCurrentTime
+          sessionToken <- liftIO (toText <$> randomIO)      
+          sessionID <- liftIO ((Key . toText) <$> randomIO) 
+          let sess = Session{..}
+          insertSessions [sess]
+          return undefined
+        else throwError err403
+      _ -> return undefined
 
 article :: ServerT ArticleAPI M
 article user = newArticle user :<|> draft user
