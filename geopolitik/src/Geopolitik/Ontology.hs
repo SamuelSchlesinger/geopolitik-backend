@@ -42,6 +42,6 @@ data Session = Session
   { sessionID :: Key Session
   , sessionOwner :: Key User 
   , sessionCreationDate :: UTCTime
-  , sessionData :: Text
+  , sessionToken :: Text
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow, ToJSON, FromJSON)

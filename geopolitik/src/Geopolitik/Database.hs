@@ -1,5 +1,6 @@
 module Geopolitik.Database where
 
+import Data.Time.Clock
 import Data.ByteString (ByteString)
 import Geopolitik.Ontology
 import Database.PostgreSQL.Simple
@@ -11,15 +12,18 @@ import Control.Monad.Reader.Class
 import Control.Monad.Catch
 import Data.Text (Text)
 
-runTestDatabaseT :: (MonadIO m, MonadMask m) => DatabaseT m a -> m a
-runTestDatabaseT (DatabaseT (ReaderT r)) = bracket getConnection (liftIO . close) r where
-  getConnection = liftIO $ connect ConnectInfo {
+testInfo :: ConnectInfo
+testInfo = ConnectInfo { 
       connectHost = "localhost"
     , connectPort = 5432
     , connectUser = "sam"
     , connectPassword = ""
     , connectDatabase = "geopolitik"
     }
+
+runTestDatabaseT :: (MonadIO m, MonadMask m) => DatabaseT m a -> m a
+runTestDatabaseT (DatabaseT (ReaderT r)) 
+  = bracket (liftIO (connect testInfo)) (liftIO . close) r
 
 runDatabaseT :: (MonadIO m, MonadMask m) => ConnectInfo -> DatabaseT m a -> m a
 runDatabaseT i (DatabaseT (ReaderT r)) = bracket (liftIO $ connect i) (liftIO . close) r
@@ -66,30 +70,21 @@ insertSessions sessions = do
        (sessionID, sessionOwner, sessionCreationDate)) 
        <$> sessions)
 
-lookupSessionByData :: MonadIO m => ByteString -> DatabaseT m (Maybe Session)
-lookupSessionByData data_ = do
-  c <- ask
-  liftIO $ query c [sql|
-     select * from sessions 
-     where sessions.data in ?;
-    |] (Only (In [data_])) >>= \case
-    [s] -> return (Just s)
-    []  -> return Nothing
-    _   -> error "database has two sessions with the same data_"
-
 validateToken :: MonadIO m => ByteString -> DatabaseT m (Maybe User)
 validateToken token = do
   c <- ask
+  present <- liftIO getCurrentTime
+  let past = addUTCTime (secondsToNominalDiffTime (-30 * 60)) present
   (liftIO $ query c [sql|
-    select * from users
-    inner join sessions on sessions.owner
-    where sessions.data in ?
-    and sessions.creation_date between current_time_stamp() - interval '1 hour' AND current_time_stamp();
-    |] (Only (In [token]))) >>= \case
+    select * 
+    from users
+    inner join sessions on sessions.owner=users.userID
+                        and sessions.token=?
+    where sessions.creation_time between ? and ?
+    |] (token, past, present)) >>= \case
       [] -> return Nothing
       [s] -> return (Just s)
-      _ -> error "database has two sessions with the same data_"
-      
+      _ -> error "database has two sessions with the same token" 
       
 lookupUsers :: MonadIO m => [Key User] -> DatabaseT m [User]
 lookupUsers users = do
