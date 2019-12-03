@@ -45,3 +45,10 @@ data Session = Session
   , sessionToken :: Text
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow, ToJSON, FromJSON)
+
+data ExecutedMigration = ExecutedMigration
+  { executedMigrationFilePath :: FilePath 
+  , executedMigrationTimestamp :: UTCTime
+  } deriving stock (Generic, Eq, Show, Read, Ord)
+    deriving anyclass (FromRow, ToRow, ToJSON, FromJSON) 
+  

@@ -31,10 +31,20 @@ library:
 
 executables:
   geopolitik:
-    main: Entry.hs
-    source-dirs: app
+    main: 'app/Entry.hs'
     dependencies:
       - geopolitik
+    <<: *executable
+  migrate:
+    main: 'app/Migrate.hs'
+    dependencies:
+      - time
+      - exceptions
+      - postgresql-simple
+      - mtl
+      - transformers
+      - geopolitik
+      - base
     <<: *executable
 
 tests:

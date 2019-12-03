@@ -54,7 +54,9 @@ insertArticles articles = do
   void . liftIO $ executeMany c [sql|
     insert into articles (id, name, author, creation_date)
     values (?, ?, ?, ?);
-   |] ((\Article{..} -> (articleID, articleName, articleOwner, articleCreationDate)) <$> articles)
+   |] ((\Article{..} -> 
+      (articleID, articleName, articleOwner, articleCreationDate)) 
+      <$> articles)
 
 insertDrafts :: MonadIO m => [Draft] -> DatabaseT m ()
 insertDrafts drafts = do
@@ -75,6 +77,16 @@ insertSessions sessions = do
     |] ((\Session{..} -> 
        (sessionID, sessionOwner, sessionCreationDate)) 
        <$> sessions)
+
+insertExecutedMigrations :: MonadIO m => [ExecutedMigration] -> DatabaseT m ()
+insertExecutedMigrations executedMigrations = do
+  c <- ask
+  void . liftIO $ executeMany c [sql|
+    insert into executed_migrations (id, file_name)
+    values (?, ?);
+  |] ((\ExecutedMigration{..} ->
+     (executedMigrationFilePath, executedMigrationTimestamp))
+     <$> executedMigrations)
 
 validateToken :: MonadIO m => ByteString -> DatabaseT m (Maybe User)
 validateToken token = do
@@ -112,6 +124,13 @@ lookupArticles articles = do
   liftIO $ query c [sql|
      select * from articles where id in ?;
     |] (Only (In articles))
+
+lookupExecutedMigrations :: MonadIO m => [FilePath] -> DatabaseT m [ExecutedMigration]
+lookupExecutedMigrations names = do
+  c <- ask
+  liftIO $ query c [sql|
+    select * from executed_migrations where file_name in ?;
+  |] (Only (In names))
 
 lookupDrafts :: MonadIO m => [Key Draft] -> DatabaseT m [Draft]
 lookupDrafts drafts = do
