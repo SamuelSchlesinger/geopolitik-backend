@@ -190,13 +190,13 @@
 - Example (`application/json;charset=utf-8`, `application/json`):
 
 ```javascript
-"LinkedArticles"
+"Linked"
 ```
 
 - Example (`application/json;charset=utf-8`, `application/json`):
 
 ```javascript
-"LinkArticleFailure"
+"LinkDraftFailure"
 ```
 
 ## POST /article/new

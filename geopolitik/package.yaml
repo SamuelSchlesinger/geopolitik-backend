@@ -10,6 +10,8 @@ library:
   source-dirs:
     - src
   dependencies:
+    - unix
+    - optparse-applicative
     - servant-docs
     - cryptonite
     - warp
@@ -18,13 +20,13 @@ library:
     - wai
     - random
     - uuid
+    - geojson
     - exceptions
     - servant-server
     - mtl
     - transformers
     - unordered-containers
     - postgresql-simple
-    - hashable
     - bytestring
     - text
     - time

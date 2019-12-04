@@ -31,8 +31,8 @@ instance ToSample (Key Void) where
   toSamples Proxy = []
 
 instance ToSample (Response NewArticle)
-instance ToSample (Response LinkArticle)
-instance ToSample LinkArticle
+instance ToSample (Response LinkDraft)
+instance ToSample LinkDraft
 instance ToSample (Response NewDraft)
 instance ToSample NewDraft
 instance ToSample (Response LatestDraft)

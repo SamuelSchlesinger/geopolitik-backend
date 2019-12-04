@@ -53,3 +53,16 @@ data ExecutedMigration = ExecutedMigration
   , executedMigrationTimestamp :: UTCTime
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow, ToJSON, FromJSON) 
+
+data Location = Location
+  { locationID :: Key Location
+  , locationName :: Text
+  , locationDescription :: Key Article
+  , locationSpot :: Coordinate
+  , locationCreationDate :: UTCTime
+  } deriving stock (Generic, Eq, Show, Read, Ord)
+    deriving anyclass (ToJSON, FromJSON)
+
+data Coordinate = Coordinate Double Double
+  deriving stock (Generic, Ord, Eq, Show, Read)
+  deriving anyclass (ToJSON, FromJSON)

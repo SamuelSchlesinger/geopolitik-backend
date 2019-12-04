@@ -11,6 +11,7 @@ import Data.Void
 
 data Tag a where
   ArticleTag :: Tag Article
+  UserTag :: Tag User
 
 deriving instance Eq (Tag a)
 deriving instance Ord (Tag a)
@@ -18,12 +19,21 @@ deriving instance Show (Tag a)
 
 data SomeTag = forall a. SomeTag (Tag a) 
 
+data Link a = Link 
+  { linkID :: Key (Link a)
+  , linkTag :: SomeTag
+  , linkDraft :: Key Draft
+  , linkEntity :: Key Void }
+  deriving stock (Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
 -- AlWAYS put all of the tags here, this todo lives forever
 allTags :: [SomeTag]
-allTags = [SomeTag ArticleTag]
+allTags = [SomeTag ArticleTag, SomeTag UserTag]
 
 instance Show SomeTag where
-  show (SomeTag ArticleTag) = "Article"
+  show (SomeTag UserTag) = "UserTag"
+  show (SomeTag ArticleTag) = "ArticleTag"
 
 instance Eq SomeTag where
   SomeTag a == SomeTag b = show a == show b
@@ -46,16 +56,8 @@ instance FromJSON SomeTag where
     x : [] -> return x
     _ -> fail "reeeee"
 
-data Link a = Link 
-  { linkID :: Key (Link a)
-  , linkTag :: SomeTag
-  , linkArticle :: Key Article 
-  , linkEntity :: Key Void }
-  deriving stock (Generic)
-  deriving anyclass (FromJSON, ToJSON)
-
-absurd :: Key a -> Key Void
-absurd (Key a) = Key a
+obscure :: Key a -> Key Void
+obscure (Key a) = Key a
 
 obvious :: Tag a -> Key Void -> Key a
 obvious _ (Key a) = Key a

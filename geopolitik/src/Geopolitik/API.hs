@@ -13,9 +13,24 @@ import Data.Aeson (ToJSON, FromJSON)
 import GHC.Generics (Generic)
 import Web.Cookie
 
-type Ctx = AuthHandler Wai.Request User ': '[]
+type GeopolitikAPI = "account" :> AccountAPI 
+                :<|> "article" :> ArticleAPI
 
-type GeopolitikAPI = "account" :> AccountAPI :<|> "article" :> ArticleAPI
+type AccountAPI = "signup" :> P SignUp
+             :<|> "signin" :> C SignIn
+             :<|> AuthProtect "geopolitik-user"
+                  :> ( "new-token" :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] ()))
+
+type ArticleAPI = AuthProtect "geopolitik-user" :> 
+                ( "new"    :> P NewArticle
+             :<|> "link"   :> P LinkDraft
+             :<|> "draft"  :> DraftAPI ) 
+             
+type DraftAPI = "new"      :> P NewDraft
+           :<|> "latest"   :> G "article-key" LatestDraft
+           :<|> Capture "username" Text :> Capture "article-name" Text :> Get '[JSON] (Response LatestDraft) 
+
+type Ctx = AuthHandler Wai.Request User ': '[]
 
 data family Response a
 
@@ -32,20 +47,6 @@ type G t req = Capture t req
 
 type C req = ReqBody '[JSON] req 
           :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response req))
-
-type AccountAPI = "signup" :> P SignUp
-             :<|> "signin" :> C SignIn
-             :<|> AuthProtect "geopolitik-user"
-                  :> ( "new-token" :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] ()))
-
-type ArticleAPI = AuthProtect "geopolitik-user" :> 
-                ( "new"    :> P NewArticle
-             :<|> "link"   :> P LinkArticle
-             :<|> "draft"  :> DraftAPI ) 
-             
-type DraftAPI = "new"      :> P NewDraft
-           :<|> "latest"   :> G "article-key" LatestDraft
-           :<|> Capture "username" Text :> Capture "article-name" Text :> Get '[JSON] (Response LatestDraft) 
 
 data SignUp = SignUp 
   { signUpUsername :: Text
@@ -92,13 +93,13 @@ data instance Response LatestDraft = LatestDraftFound (Key Draft) (Key User) Tex
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-data LinkArticle = LinkArticle
-  { linkArticleFrom :: Key Article
-  , linkArticleTag :: SomeTag
-  , linkArticleTo :: Key Void 
+data LinkDraft = LinkDraft
+  { linkDraftFrom :: Key Draft
+  , linkDraftTag :: SomeTag
+  , linkDraftTo :: Key Void 
   } deriving stock (Eq, Show, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
-data instance Response LinkArticle = LinkedArticles | LinkArticleFailure
+data instance Response LinkDraft = Linked | LinkDraftFailure
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)

@@ -7,6 +7,7 @@ import Geopolitik.Ontology
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import Control.Monad
+import Data.String
 import Control.Monad.Trans
 import Control.Monad.Trans.Reader (ReaderT(..))
 import Control.Monad.Reader.Class
@@ -93,7 +94,15 @@ insertLinks links = do
   void . liftIO $ executeMany c [sql|
     insert into links
     values (?, ?, ?, ?);
-  |] ((\Link{..} -> (linkID, linkTag, linkArticle, linkEntity)) <$> links)
+  |] ((\Link{..} -> (linkID, linkTag, linkDraft, linkEntity)) <$> links)
+
+insertLocation :: MonadIO m => Location -> DatabaseT m ()
+insertLocation Location{locationSpot = Coordinate x y, ..} = do
+  c <- ask
+  void . liftIO $ execute c ([sql|
+    insert into locations
+    values (?, ?, ?, |] <> fromString ("'POINT(" <> show x <> " " <> show y <> ")'") <> [sql|, ?)
+  |]) (locationID, locationName, locationDescription, locationCreationDate)
 
 validateToken :: MonadIO m => ByteString -> DatabaseT m (Maybe User)
 validateToken token = do

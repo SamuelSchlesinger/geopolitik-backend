@@ -16,5 +16,7 @@ main = runDatabaseT testInfo do
      drop table drafts cascade;
      drop table sessions;
      drop table links;
+     drop table locations;
+     drop extension postgis;
     |]
 

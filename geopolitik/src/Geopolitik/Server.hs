@@ -82,20 +82,34 @@ newArticle User{userID = articleOwner} (NewArticle articleName) = do
   insertArticles [Article{..}]
   return ArticleCreated
 
-link :: User -> LinkArticle -> DatabaseT Handler (Response LinkArticle)
-link User{..} (LinkArticle linkArticle (SomeTag tag) linkEntity') = do
-  lookupArticles [linkArticle] >>= \case
-    [Article{articleOwner}] -> 
-      if userID == articleOwner 
+link :: User -> LinkDraft -> DatabaseT Handler (Response LinkDraft)
+link User{..} (LinkDraft linkDraft (SomeTag tag) linkEntity') = do
+  lookupDrafts [linkDraft] >>= \case
+    [Draft{draftAuthor}] -> 
+      if userID == draftAuthor 
         then case tag of
           ArticleTag -> do
-            linkID <- liftIO ((Key . toText) <$> randomIO)
-            let linkTag = SomeTag ArticleTag
-            let linkEntity = absurd linkEntity'
-            insertLinks [Link{..}] 
-            return LinkedArticles
-        else return LinkArticleFailure
-    _ -> return LinkArticleFailure
+            lookupArticles [obvious tag linkEntity'] >>= \case
+              [Article{}] -> do 
+                linkID <- liftIO ((Key . toText) <$> randomIO)
+                let linkTag = SomeTag ArticleTag
+                let linkEntity = obscure linkEntity'
+                insertLinks [Link{..}] 
+                return Linked
+              [] -> throwError err404
+              _ -> error "database is in an inconsistent state: link':"
+          UserTag -> do
+            lookupUsers [obvious tag linkEntity'] >>= \case
+              [User{}] -> do
+                linkID <- liftIO ((Key . toText) <$> randomIO)
+                let linkTag = SomeTag UserTag
+                let linkEntity = obscure linkEntity
+                insertLinks[Link{..}]
+                return Linked
+              [] -> throwError err404
+              _ -> error "database is in an inconsistent state: link"
+        else throwError err403
+    _ -> throwError err404
 
 draft :: User -> ServerT DraftAPI M
 draft user = newDraft user :<|> latest user :<|> latest' user

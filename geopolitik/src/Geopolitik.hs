@@ -7,13 +7,15 @@ import Database.PostgreSQL.Simple
 import Control.Monad.Reader.Class
 import Network.Wai.Handler.Warp
 import Control.Monad.Trans
+import System.Posix.User
 
 main :: IO ()
 main = do
+  username <- getEffectiveUserName
   let connInfo = ConnectInfo { 
       connectHost = "localhost"
     , connectPort = 5432
-    , connectUser = "sam"
+    , connectUser = username
     , connectPassword = ""
     , connectDatabase = "geopolitik"
     }  

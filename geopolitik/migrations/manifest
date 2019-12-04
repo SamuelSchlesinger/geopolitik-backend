@@ -4,3 +4,5 @@ articles.sql
 drafts.sql
 sessions.sql
 links.sql
+postgis.sql
+locations.sql
