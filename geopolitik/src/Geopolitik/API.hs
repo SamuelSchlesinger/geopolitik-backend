@@ -16,10 +16,10 @@ import Web.Cookie
 type GeopolitikAPI = "account" :> AccountAPI 
                 :<|> "article" :> ArticleAPI
 
-type AccountAPI = "signup" :> P SignUp
+type AccountAPI = "signup" :> C SignUp
              :<|> "signin" :> C SignIn
              :<|> AuthProtect "geopolitik-user"
-                  :> ( "new-token" :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] ()))
+                  :> ( "new-token" :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn)))
 
 type ArticleAPI = AuthProtect "geopolitik-user" :> 
                 ( "new"    :> P NewArticle
@@ -47,7 +47,7 @@ type G t req = Capture t req
             :> Get '[JSON] (Response req) 
 
 type C req = ReqBody '[JSON] req 
-          :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response req))
+          :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
 
 data SignUp = SignUp 
   { signUpUsername :: Text
@@ -65,7 +65,7 @@ data SignIn = SignIn
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-data instance Response SignIn = SignedIn | SignInFailure
+data instance Response SignIn = SignedIn
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 

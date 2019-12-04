@@ -42,15 +42,15 @@ server = account :<|> article
 account :: ServerT AccountAPI M
 account = signup :<|> signin :<|> newToken
 
-signup :: SignUp -> M (Response SignUp)
+signup :: SignUp -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
 signup (SignUp username password) 
   = lookupUsersByUsername [username] >>= \case
       [] -> do
         userCreationDate <- liftIO getCurrentTime
         userID <- liftIO ((Key . toText) <$> randomIO)
         insertUsers [User{..}] 
-        return SignedUp
-      _ -> return SignUpFailure
+        signin $ SignIn (getKey userID) password
+      _ -> throwError err403
 
 signin :: SignIn -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
 signin (SignIn username password)
@@ -70,9 +70,9 @@ signin (SignIn username password)
         else throwError err403
       _ -> throwError err403
 
-newToken :: User -> M (Headers '[Header "Set-Cookie" SetCookie] ())
+newToken :: User -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
 newToken User{..} = do
-  fmap (fmap (const ())) $ signin $ SignIn username password
+  signin $ SignIn username password
 
 article :: ServerT ArticleAPI M
 article user = newArticle user :<|> draft user
