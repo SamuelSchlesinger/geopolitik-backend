@@ -6,3 +6,4 @@ sessions.sql
 links.sql
 postgis.sql
 locations.sql
+comments.sql

@@ -12,6 +12,8 @@ import Data.Void
 data Tag a where
   ArticleTag :: Tag Article
   UserTag :: Tag User
+  CommentTag :: Tag Comment
+  LocationTag :: Tag Location
 
 deriving instance Eq (Tag a)
 deriving instance Ord (Tag a)
@@ -19,8 +21,8 @@ deriving instance Show (Tag a)
 
 data SomeTag = forall a. SomeTag (Tag a) 
 
-data Link a = Link 
-  { linkID :: Key (Link a)
+data Link = Link 
+  { linkID :: Key Link
   , linkTag :: SomeTag
   , linkDraft :: Key Draft
   , linkEntity :: Key Void }
@@ -29,11 +31,13 @@ data Link a = Link
 
 -- AlWAYS put all of the tags here, this todo lives forever
 allTags :: [SomeTag]
-allTags = [SomeTag ArticleTag, SomeTag UserTag]
+allTags = [SomeTag ArticleTag, SomeTag UserTag, SomeTag CommentTag, SomeTag LocationTag]
 
 instance Show SomeTag where
   show (SomeTag UserTag) = "UserTag"
   show (SomeTag ArticleTag) = "ArticleTag"
+  show (SomeTag CommentTag) = "CommentTag"
+  show (SomeTag LocationTag) = "LocationTag"
 
 instance Eq SomeTag where
   SomeTag a == SomeTag b = show a == show b

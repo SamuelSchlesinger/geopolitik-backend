@@ -84,32 +84,62 @@ newArticle User{userID = articleOwner} (NewArticle articleName) = do
 
 link :: User -> LinkDraft -> DatabaseT Handler (Response LinkDraft)
 link User{..} (LinkDraft linkDraft (SomeTag tag) linkEntity') = do
-  lookupDrafts [linkDraft] >>= \case
-    [Draft{draftAuthor}] -> 
-      if userID == draftAuthor 
-        then case tag of
-          ArticleTag -> do
-            lookupArticles [obvious tag linkEntity'] >>= \case
-              [Article{}] -> do 
-                linkID <- liftIO ((Key . toText) <$> randomIO)
-                let linkTag = SomeTag ArticleTag
-                let linkEntity = obscure linkEntity'
-                insertLinks [Link{..}] 
-                return Linked
-              [] -> throwError err404
-              _ -> error "database is in an inconsistent state: link':"
-          UserTag -> do
-            lookupUsers [obvious tag linkEntity'] >>= \case
-              [User{}] -> do
-                linkID <- liftIO ((Key . toText) <$> randomIO)
-                let linkTag = SomeTag UserTag
-                let linkEntity = obscure linkEntity
-                insertLinks[Link{..}]
-                return Linked
-              [] -> throwError err404
-              _ -> error "database is in an inconsistent state: link"
+  case tag of
+    ArticleTag -> do
+      lookupDrafts [linkDraft] >>= \case
+        [Draft{draftAuthor}] -> if userID == draftAuthor then 
+          lookupArticles [obvious tag linkEntity'] >>= \case
+            [Article{}] -> do 
+              linkID <- liftIO ((Key . toText) <$> randomIO)
+              let linkTag = SomeTag ArticleTag
+              let linkEntity = obscure linkEntity'
+              insertLinks [Link{..}] 
+              return Linked
+            [] -> throwError err404
+            _ -> error "database is in an inconsistent state: link"
         else throwError err403
-    _ -> throwError err404
+        [] -> throwError err404
+        _ -> error "database is in an inconsistent state: link''''''"
+    UserTag -> do
+      lookupDrafts [linkDraft] >>= \case
+        [Draft{draftAuthor}] -> if userID == draftAuthor then
+          lookupUsers [obvious tag linkEntity'] >>= \case
+            [User{}] -> do
+              linkID <- liftIO ((Key . toText) <$> randomIO)
+              let linkTag = SomeTag UserTag
+              let linkEntity = obscure linkEntity
+              insertLinks[Link{..}]
+              return Linked
+            [] -> throwError err404
+            _ -> error "database is in an inconsistent state: link'" 
+        else throwError err403
+        [] -> throwError err404
+        _ -> error "database is in an inconsistent state: link'''''"
+    CommentTag -> do
+      lookupComments [obvious tag linkEntity'] >>= \case
+        [Comment{}] -> do
+          linkID <- liftIO ((Key . toText) <$> randomIO)
+          let linkTag = SomeTag CommentTag
+          let linkEntity = obscure linkEntity'
+          insertLinks [Link{..}]
+          return Linked 
+        [] -> throwError err404
+        _ -> error "database is in an inconsistent state: link''"
+    LocationTag -> do
+      lookupDrafts [linkDraft] >>= \case
+        [Draft{draftAuthor}] -> if userID == draftAuthor then
+          lookupLocations [obvious tag linkEntity'] >>= \case
+            [Location{}] -> do
+              linkID <- liftIO ((Key . toText) <$> randomIO)
+              let linkTag = SomeTag CommentTag
+              let linkEntity = obscure linkEntity'
+              insertLinks [Link{..}]
+              return Linked
+            [] -> throwError err404
+            _ -> error "database is in an inconsistent state: link'''"
+        else throwError err403
+        [] -> throwError err404
+        _ -> error "database is in an inconsistent state: link''''"
 
 draft :: User -> ServerT DraftAPI M
 draft user = newDraft user :<|> latest user :<|> latest' user

@@ -4,6 +4,6 @@
 create table links (
   id text primary key unique,
   tag text not null,
-  article text not null references drafts(id) on delete cascade,
+  draft text not null references drafts(id) on delete cascade,
   entity text not null
 );

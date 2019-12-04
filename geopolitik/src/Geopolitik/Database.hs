@@ -88,7 +88,7 @@ insertExecutedMigrations executedMigrations = do
      (executedMigrationFilePath, executedMigrationTimestamp))
      <$> executedMigrations)
 
-insertLinks :: MonadIO m => [Link a] -> DatabaseT m ()
+insertLinks :: MonadIO m => [Link] -> DatabaseT m ()
 insertLinks links = do
   c <- ask
   void . liftIO $ executeMany c [sql|
@@ -156,6 +156,20 @@ lookupDrafts drafts = do
   liftIO $ query c [sql|
      select * from drafts where id in ?;
     |] (Only (In drafts))
+
+lookupComments :: MonadIO m => [Key Comment] -> DatabaseT m [Comment]
+lookupComments comments = do
+  c <- ask
+  liftIO $ query c [sql|
+    select * from comments where id in ?;
+   |] (Only (In comments))
+                                
+lookupLocations :: MonadIO m => [Key Location] -> DatabaseT m [Location]
+lookupLocations locations = do
+  c <- ask
+  liftIO $ query c [sql|
+    select (id, name, description, ST_AsText(spot), creation_date) from locations where id in ?;
+    |] (Only (In locations))
 
 latestDraft :: MonadIO m => Key Article -> DatabaseT m (Maybe Draft)
 latestDraft article = do
