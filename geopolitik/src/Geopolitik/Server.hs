@@ -30,26 +30,30 @@ ctx :: Connection -> Context Ctx
 ctx conn = mkAuthHandler validate :. EmptyContext where
   validate :: Wai.Request -> Handler User
   validate req = do
+    liftIO $ putStrLn "trying to validate a user"
     cookie <- maybe (throwError err403) return 
       $ lookup "cookie" (Wai.requestHeaders req)
+    liftIO $ putStrLn "found cookies"
     token <- maybe (throwError err403) return
       $ lookup "geopolitik-user" $ parseCookies cookie
+    liftIO $ putStrLn "found geopolitik-user cookies"
     maybe (throwError err401) return =<< runSharedDatabaseT conn (validateToken token) 
 
 server :: ServerT GeopolitikAPI M
-server = account :<|> article 
+server = account :<|> article :<|> serveDirectoryWebApp "frontend" 
 
 account :: ServerT AccountAPI M
 account = signup :<|> signin :<|> newToken
 
-signup :: SignUp -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
+signup :: SignUp -> M (Response SignUp)
 signup (SignUp username password) 
-  = lookupUsersByUsername [username] >>= \case
+  = do
+    lookupUsersByUsername [username] >>= \case
       [] -> do
         userCreationDate <- liftIO getCurrentTime
         userID <- liftIO ((Key . toText) <$> randomIO)
         insertUsers [User{..}] 
-        signin $ SignIn (getKey userID) password
+        return SignedUp
       _ -> throwError err403
 
 signin :: SignIn -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))

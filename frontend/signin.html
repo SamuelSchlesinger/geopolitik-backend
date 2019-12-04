@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title>Geopolitik</title>
+  <script language="JavaScript">
+    function signin(form) {
+      var xhttp = new XMLHttpRequest();
+      var url = '/account/signin'
+      xhttp.open('POST', url, true);
+      xhttp.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
+      xhttp.withCredentials = true;
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          window.location.href = 'authenticated.html'
+        }
+      }
+      let req = JSON.stringify({
+        signInUsername: form.username.value,
+        signInPassword: form.password.value
+      });
+      console.log(req);
+      xhttp.send(req);
+    }
+  </script>
+    
+  </head>
+
+  <form name="geopolitik-sign-in" action="" method="post">
+    Username: <input type="text" name="username"> <br>
+    Password: <input type="password" name="password"> <br>
+    <input type="button" value="Sign In" method="post" onClick="signin(this.form)">
+  </form>
+</html>

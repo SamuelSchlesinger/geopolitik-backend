@@ -8,9 +8,12 @@ import Control.Monad.Reader.Class
 import Network.Wai.Handler.Warp
 import Control.Monad.Trans
 import System.Posix.User
+import System.Directory
+import System.Environment
 
 main :: IO ()
 main = do
+  getEnv "GEOPOLITIK_LOCATION" >>= setCurrentDirectory
   username <- getEffectiveUserName
   let connInfo = ConnectInfo { 
       connectHost = "localhost"
@@ -27,4 +30,12 @@ main = do
                 (hoistServerWithContext geopolitikProxy ctxProxy
                    (runSharedDatabaseT conn) 
                    server)
-    liftIO (run 8080 app)
+    let settings = setOnException errorPrinter $ setPort 8080 defaultSettings
+    liftIO (runSettings settings app)
+
+errorPrinter :: (Show a, Show b) => a -> b -> IO ()
+errorPrinter sr ex = do
+  putStr "This request: "
+  print sr
+  putStr "Fails with this exception: "
+  print ex

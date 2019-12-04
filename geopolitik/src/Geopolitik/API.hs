@@ -15,8 +15,9 @@ import Web.Cookie
 
 type GeopolitikAPI = "account" :> AccountAPI 
                 :<|> "article" :> ArticleAPI
+                :<|> Raw
 
-type AccountAPI = "signup" :> C SignUp
+type AccountAPI = "signup" :> P SignUp
              :<|> "signin" :> C SignIn
              :<|> AuthProtect "geopolitik-user"
                   :> ( "new-token" :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn)))

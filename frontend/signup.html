@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <title>Geopolitik</title>
+  <script language="JavaScript">
+    function signup(form) {
+      var xhttp = new XMLHttpRequest();
+      var url = '/account/signup'
+      xhttp.open('POST', url);
+      xhttp.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          window.location.href = 'signin.html'
+        }
+      }
+      let req = JSON.stringify({
+        signUpUsername: form.username.value,
+        signUpPassword: form.password.value
+      });
+      console.log(req);
+      xhttp.send(req);
+    }
+  </script>
+    
+  </head>
+
+  <form name="geopolitik-sign-up" action="" method="post">
+    Username: <input type="text" name="username"> <br>
+    Password: <input type="password" name="password"> <br>
+    <input type="button" value="Sign Up" method="post" onClick="signup(this.form)">
+  </form>
+</html>
