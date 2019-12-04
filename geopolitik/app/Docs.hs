@@ -2,7 +2,6 @@ module Main where
 
 import Geopolitik.API
 import Geopolitik.Ontology
-import Geopolitik.Tag
 import Servant.Docs hiding (Response)
 import Data.Proxy
 import Data.Text (Text)

@@ -14,7 +14,6 @@ import Control.Monad.Reader.Class
 import Control.Monad.Catch
 import Data.Text (Text)
 import Control.Monad.Except
-import Geopolitik.Tag
 
 testInfo :: ConnectInfo
 testInfo = ConnectInfo { 
@@ -171,6 +170,15 @@ lookupLocations locations = do
     select (id, name, description, ST_AsText(spot), creation_date) from locations where id in ?;
     |] (Only (In locations))
 
+lookupEntities :: MonadIO m => Tag a -> [Key a] -> DatabaseT m [a]
+lookupEntities tag ks = case tag of
+  ArticleTag -> lookupArticles ks
+  UserTag -> lookupUsers ks
+  CommentTag -> lookupComments ks
+  DraftTag -> lookupDrafts ks 
+  LocationTag -> lookupLocations ks
+  
+
 latestDraft :: MonadIO m => Key Article -> DatabaseT m (Maybe Draft)
 latestDraft article = do
   c <- ask
@@ -230,3 +238,4 @@ withTestUsers users dbGo = bracket (insertUsers users) (const . void $ deleteUse
 withTestArticles :: (MonadIO m, MonadMask m) => [Article] -> ([Key Article] -> DatabaseT m a) -> DatabaseT m a
 withTestArticles articles dbGo = bracket (insertArticles articles) (const $ deleteArticles articleKeys) (const $ dbGo articleKeys) where
   articleKeys = map articleID articles
+  

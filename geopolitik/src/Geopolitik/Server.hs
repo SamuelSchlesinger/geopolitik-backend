@@ -3,6 +3,7 @@ module Geopolitik.Server where
 import Data.Text (Text)
 import Geopolitik.Database
 import Geopolitik.Ontology
+import Geopolitik.Auth
 import Control.Monad.Trans
 import Geopolitik.API
 import Servant
@@ -16,7 +17,6 @@ import Database.PostgreSQL.Simple hiding ((:.))
 import Database.PostgreSQL.Simple.SqlQQ
 import Control.Monad.Reader.Class
 import Web.Cookie
-import Geopolitik.Tag
 
 type M = DatabaseT Handler
 
@@ -89,63 +89,12 @@ newArticle User{userID = articleOwner} (NewArticle articleName) = do
   return (ArticleCreated articleID)
 
 link :: User -> LinkDraft -> DatabaseT Handler (Response LinkDraft)
-link User{..} (LinkDraft linkDraft (SomeTag tag) linkEntity') = do
-  case tag of
-    ArticleTag -> do
-      lookupDrafts [linkDraft] >>= \case
-        [Draft{draftAuthor}] -> if userID == draftAuthor then do
-          lookupArticles [obvious tag linkEntity'] >>= \case
-            [Article{}] -> do 
-              linkID <- liftIO ((Key . toText) <$> randomIO)
-              let linkTag = SomeTag ArticleTag
-              let linkEntity = obscure linkEntity'
-              insertLinks [Link{..}] 
-              return Linked
-            [] -> throwError err404
-            _ -> error "database is in an inconsistent state: link"
-        else throwError err403
-        [] -> throwError err404
-        _ -> error "database is in an inconsistent state: link''''''"
-    UserTag -> do
-      lookupDrafts [linkDraft] >>= \case
-        [Draft{draftAuthor}] -> if userID == draftAuthor then
-          lookupUsers [obvious tag linkEntity'] >>= \case
-            [User{}] -> do
-              linkID <- liftIO ((Key . toText) <$> randomIO)
-              let linkTag = SomeTag UserTag
-              let linkEntity = obscure linkEntity
-              insertLinks[Link{..}]
-              return Linked
-            [] -> throwError err404
-            _ -> error "database is in an inconsistent state: link'" 
-        else throwError err403
-        [] -> throwError err404
-        _ -> error "database is in an inconsistent state: link'''''"
-    CommentTag -> do
-      lookupComments [obvious tag linkEntity'] >>= \case
-        [Comment{}] -> do
-          linkID <- liftIO ((Key . toText) <$> randomIO)
-          let linkTag = SomeTag CommentTag
-          let linkEntity = obscure linkEntity'
-          insertLinks [Link{..}]
-          return Linked 
-        [] -> throwError err404
-        _ -> error "database is in an inconsistent state: link''"
-    LocationTag -> do
-      lookupDrafts [linkDraft] >>= \case
-        [Draft{draftAuthor}] -> if userID == draftAuthor then
-          lookupLocations [obvious tag linkEntity'] >>= \case
-            [Location{}] -> do
-              linkID <- liftIO ((Key . toText) <$> randomIO)
-              let linkTag = SomeTag CommentTag
-              let linkEntity = obscure linkEntity'
-              insertLinks [Link{..}]
-              return Linked
-            [] -> throwError err404
-            _ -> error "database is in an inconsistent state: link'''"
-        else throwError err403
-        [] -> throwError err404
-        _ -> error "database is in an inconsistent state: link''''"
+link u@User{..} (LinkDraft linkDraft (SomeTag tag) linkEntity) = do
+  linkAuth u tag linkDraft (obvious tag linkEntity) 
+  linkID <- liftIO ((Key . toText) <$> randomIO)
+  let linkTag = SomeTag tag
+  insertLinks [Link{..}]
+  return Linked
 
 draft :: User -> ServerT DraftAPI M
 draft user = newDraft user :<|> comments user :<|> link user :<|> latest user :<|> latest' user

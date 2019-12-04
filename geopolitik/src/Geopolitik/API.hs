@@ -5,7 +5,6 @@ import Servant
 import Servant.Server.Experimental.Auth
 import Data.Text (Text)
 import Geopolitik.Ontology
-import Geopolitik.Tag
 import Data.Void
 import Data.Time.Clock (UTCTime)
 import qualified Network.Wai as Wai
