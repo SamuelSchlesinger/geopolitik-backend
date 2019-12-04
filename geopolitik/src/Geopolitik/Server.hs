@@ -87,7 +87,7 @@ link User{..} (LinkDraft linkDraft (SomeTag tag) linkEntity') = do
   case tag of
     ArticleTag -> do
       lookupDrafts [linkDraft] >>= \case
-        [Draft{draftAuthor}] -> if userID == draftAuthor then 
+        [Draft{draftAuthor}] -> if userID == draftAuthor then do
           lookupArticles [obvious tag linkEntity'] >>= \case
             [Article{}] -> do 
               linkID <- liftIO ((Key . toText) <$> randomIO)
@@ -154,11 +154,11 @@ newDraft u@User{userID = draftAuthor} (NewDraft draftArticle draftContents) = do
 latest :: User -> LatestDraft -> M (Response LatestDraft)
 latest _ (LatestDraft articleKey) 
   = latestDraft articleKey >>= \case
-      Just (Draft draftID _ contents draftAuthor timestamp) -> return $ LatestDraftFound draftID draftAuthor contents timestamp
+      Just Draft{..} -> return $ LatestDraftFound draftID draftAuthor draftContents draftCreationDate
       Nothing -> return LatestDraftNotFound
 
 latest' :: User -> Text -> Text -> M (Response LatestDraft)
 latest' _ username articleName
   = latestDraft' username articleName >>= \case
-      Just (Draft draftID _ contents draftAuthor timestamp) -> return $ LatestDraftFound draftID draftAuthor contents timestamp
+      Just Draft{..} -> return $ LatestDraftFound draftID draftAuthor draftContents draftCreationDate
       Nothing -> return LatestDraftNotFound

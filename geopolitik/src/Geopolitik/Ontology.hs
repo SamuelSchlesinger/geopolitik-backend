@@ -35,8 +35,8 @@ data Article = Article
 data Draft = Draft
   { draftID :: Key Draft
   , draftArticle :: Key Article
-  , draftContents :: Text
   , draftAuthor :: Key User
+  , draftContents :: Text
   , draftCreationDate :: UTCTime 
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (FromRow, ToRow, ToJSON, FromJSON)

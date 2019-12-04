@@ -97,7 +97,7 @@ data LinkDraft = LinkDraft
   { linkDraftFrom :: Key Draft
   , linkDraftTag :: SomeTag
   , linkDraftTo :: Key Void 
-  } deriving stock (Eq, Show, Generic)
+  } deriving stock (Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
 data instance Response LinkDraft = Linked | LinkDraftFailure

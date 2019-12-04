@@ -33,12 +33,6 @@ data Link = Link
 allTags :: [SomeTag]
 allTags = [SomeTag ArticleTag, SomeTag UserTag, SomeTag CommentTag, SomeTag LocationTag]
 
-instance Show SomeTag where
-  show (SomeTag UserTag) = "UserTag"
-  show (SomeTag ArticleTag) = "ArticleTag"
-  show (SomeTag CommentTag) = "CommentTag"
-  show (SomeTag LocationTag) = "LocationTag"
-
 instance Eq SomeTag where
   SomeTag a == SomeTag b = show a == show b
 
