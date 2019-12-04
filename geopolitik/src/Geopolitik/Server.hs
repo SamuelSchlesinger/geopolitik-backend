@@ -13,6 +13,8 @@ import Data.UUID
 import System.Random
 import qualified Network.Wai as Wai
 import Database.PostgreSQL.Simple hiding ((:.))
+import Database.PostgreSQL.Simple.SqlQQ
+import Control.Monad.Reader.Class
 import Web.Cookie
 import Geopolitik.Tag
 
@@ -73,14 +75,14 @@ newToken User{..} = do
   fmap (fmap (const ())) $ signin $ SignIn username password
 
 article :: ServerT ArticleAPI M
-article user = newArticle user :<|> link user :<|> draft user
+article user = newArticle user :<|> draft user
 
 newArticle :: User -> NewArticle -> DatabaseT Handler (Response NewArticle)
 newArticle User{userID = articleOwner} (NewArticle articleName) = do
   articleCreationDate <- liftIO getCurrentTime
   articleID <- liftIO ((Key . toText) <$> randomIO) 
   insertArticles [Article{..}]
-  return ArticleCreated
+  return (ArticleCreated articleID)
 
 link :: User -> LinkDraft -> DatabaseT Handler (Response LinkDraft)
 link User{..} (LinkDraft linkDraft (SomeTag tag) linkEntity') = do
@@ -142,7 +144,17 @@ link User{..} (LinkDraft linkDraft (SomeTag tag) linkEntity') = do
         _ -> error "database is in an inconsistent state: link''''"
 
 draft :: User -> ServerT DraftAPI M
-draft user = newDraft user :<|> latest user :<|> latest' user
+draft user = newDraft user :<|> comments user :<|> link user :<|> latest user :<|> latest' user
+
+comments :: User -> DraftComments -> M (Response DraftComments)
+comments _ (DraftComments draftKey) = do
+  c <- ask
+  fmap DraftCommentsFound $ liftIO $ query c [sql|
+     select (comments.id, comments.author, comments.content) from comments
+        inner join links on comments.id = links.entity 
+        where comments.id in ?
+        and links.tag = 'CommentTag';
+    |] (Only (In [draftKey]))
 
 newDraft :: User -> NewDraft -> M (Response NewDraft)
 newDraft u@User{userID = draftAuthor} (NewDraft draftArticle draftContents) = do

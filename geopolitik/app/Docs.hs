@@ -30,12 +30,16 @@ instance ToSample (Key User) where
 instance ToSample (Key Void) where
   toSamples Proxy = []
 
+instance ToSample (Key Comment) where
+  toSamples Proxy = [("comment key", Key "b00e6dec-fcb4-4e4a-a298-c5cac17e37e8")]
+
 instance ToSample (Response NewArticle)
 instance ToSample (Response LinkDraft)
 instance ToSample LinkDraft
 instance ToSample (Response NewDraft)
 instance ToSample NewDraft
 instance ToSample (Response LatestDraft)
+instance ToSample Comment
 instance ToSample Draft
 
 instance ToSample UTCTime where
@@ -49,6 +53,11 @@ instance ToCapture (Capture "username" Text) where
 
 instance ToCapture (Capture "article-name" Text) where
   toCapture _ = DocCapture "article-name" "Article name"
+
+instance ToCapture (Capture "draft-key" DraftComments) where
+  toCapture _ = DocCapture "draft-key" "Draft key"
+
+instance ToSample (Response DraftComments)
 
 instance ToSample SomeTag where
   toSamples Proxy = [("an article tag", SomeTag ArticleTag)]
