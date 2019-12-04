@@ -30,13 +30,10 @@ ctx :: Connection -> Context Ctx
 ctx conn = mkAuthHandler validate :. EmptyContext where
   validate :: Wai.Request -> Handler User
   validate req = do
-    liftIO $ putStrLn "trying to validate a user"
     cookie <- maybe (throwError err403) return 
       $ lookup "cookie" (Wai.requestHeaders req)
-    liftIO $ putStrLn "found cookies"
     token <- maybe (throwError err403) return
       $ lookup "geopolitik-user" $ parseCookies cookie
-    liftIO $ putStrLn "found geopolitik-user cookies"
     maybe (throwError err401) return =<< runSharedDatabaseT conn (validateToken token) 
 
 server :: ServerT GeopolitikAPI M
