@@ -21,3 +21,5 @@ drop, which you can run like
 stack run drop
 ```
 This drops all of the tables that are involved in the geopolitik app.
+
+![Module Structure](modules.svg)
