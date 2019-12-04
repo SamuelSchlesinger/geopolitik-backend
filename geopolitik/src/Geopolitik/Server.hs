@@ -53,7 +53,7 @@ signup (SignUp username password)
         return SignedUp
       _ -> throwError err403
 
-signin :: SignIn -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
+signin :: SignIn -> M (H (Response SignIn))
 signin (SignIn username password)
   = lookupUsersByUsername [username] >>= \case
       [User{userID = sessionOwner, password = userPassword}] -> do
@@ -67,11 +67,13 @@ signin (SignIn username password)
                    { setCookieName = "geopolitik-user"
                    , setCookieMaxAge = Just (60 * 30)
                    , setCookieValue = encodeUtf8 sessionToken }) 
+                 $ addHeader True
+                 $ addHeader "*"
                    SignedIn 
         else throwError err403
       _ -> throwError err403
 
-newToken :: User -> M (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
+newToken :: User -> M (H (Response SignIn))
 newToken User{..} = do
   signin $ SignIn username password
 

@@ -19,7 +19,7 @@ type GeopolitikAPI = "account" :> AccountAPI
 type AccountAPI = "signup" :> P SignUp
              :<|> "signin" :> C SignIn
              :<|> AuthProtect "geopolitik-user"
-                  :> ( "new-token" :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn)))
+                  :> ( "new-token" :> S (Response SignIn) )
 
 type ArticleAPI = AuthProtect "geopolitik-user" :> 
                 ( "new"    :> P NewArticle
@@ -47,7 +47,11 @@ type G t req = Capture t req
             :> Get '[JSON] (Response req) 
 
 type C req = ReqBody '[JSON] req 
-          :> Post '[JSON] (Headers '[Header "Set-Cookie" SetCookie] (Response SignIn))
+          :> S (Response SignIn)
+
+type S res = Post '[JSON] (H res) 
+
+type H res = Headers '[Header "Set-Cookie" SetCookie, Header "Access-Control-Allow-Origin" Bool, Header "Access-Control-Origin" String] res
 
 data SignUp = SignUp 
   { signUpUsername :: Text

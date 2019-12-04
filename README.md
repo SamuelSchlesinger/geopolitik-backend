@@ -21,6 +21,4 @@ stack run drop
 
 ## Architecture
 
-This application is deeply simple and it was designed to be as such. There are 6 modules in the Haskell
-library that the library consists of, and I expect it will stay that way. 
 ![Module Structure](mods.png)
