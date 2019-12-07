@@ -23,6 +23,15 @@ Finally, to run the server on port 8080, you can run the command:
 stack run geopolitik
 ```
 
+## Using
+
+Currently, there is no frontend to speak of. That being said, if you have the
+server running, you can poke it in a number of ways. One is curl, with a
+cookie file. This is well documented on the internet and you can always poke
+me here if you are having troubles. The other way is a number of html pages
+which serve as basic tests of some of the endpoints. These go in a sequence
+from [signup](http://localhost:8080/signup.html).
+
 ## Architecture
 
 ![Module Structure](mods.png)
