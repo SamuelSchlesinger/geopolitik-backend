@@ -49,7 +49,7 @@ ctx conn = mkAuthHandler validate :. EmptyContext
         runSharedDatabaseT conn (validateToken token)
 
 server :: ServerT GeopolitikAPI M
-server = account :<|> article :<|> serveDirectoryWebApp "frontend"
+server = account :<|> article :<|> serveDirectoryWebApp "static"
 
 account :: ServerT AccountAPI M
 account = signup :<|> signin :<|> newToken

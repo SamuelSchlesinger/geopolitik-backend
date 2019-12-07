@@ -35,6 +35,11 @@ library:
   <<: *library
 
 executables:
+  geopolitik:
+    main: 'app/Entry.hs'
+    dependencies:
+      - geopolitik
+    <<: *executable
   drop:
     main: 'app/Drop.hs'
     dependencies:
@@ -45,11 +50,6 @@ executables:
       - base
       - time
       - exceptions
-    <<: *executable
-  geopolitik:
-    main: 'app/Entry.hs'
-    dependencies:
-      - geopolitik
     <<: *executable
   migrate:
     main: 'app/Migrate.hs'

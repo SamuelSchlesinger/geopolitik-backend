@@ -7,7 +7,7 @@ business, geography.
 ## Installing/Running
 
 To run this on mac, you need to have PostgreSQL running locally on port 5432 with a database
-called "geopolitik", and you need to have the postgis extension installed, both of which are
+called "geopolitik", and you need to have the PostGIS extension installed, both of which are
 available via brew.
 ```bash
 export GEOPOLITIK_LOCATION=<this-folder>
@@ -18,6 +18,12 @@ and get rid of them all.
 ```bash
 stack run drop
 ```
+
+Finally, to run the server on port 8080, you can run the command:
+```bash
+stack run geopolitik
+```
+
 
 ## Architecture
 
