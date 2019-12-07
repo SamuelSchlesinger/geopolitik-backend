@@ -4,15 +4,15 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script language="JavaScript">
     function signin(form) {
-      var xhttp = new XMLHttpRequest();
-      var url = '/account/signin'
-      xhttp.open('POST', url);
-      xhttp.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
-      xhttp.setRequestHeader('Accept', 'application/json');
       xhttp.withCredentials = true;
+      fetch('/account/signin', {method: 'post', credentials: 'include'}).then(json).then(function (data) {
+        console.log(data);
+        })
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          document.token = this.responseText;
+          console.log(document.cookie)
+          document.cookie = "geopolitik-user=" + this.responseText
+            <!-- window.location.href = "http://localhost:8080/authenticated.html" -->
         }
       }
       let req = JSON.stringify({
