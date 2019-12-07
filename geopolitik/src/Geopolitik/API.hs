@@ -24,7 +24,10 @@ type AccountAPI
   :<|> AuthProtect "geopolitik-user" :> ("new-token" :> S (Response SignIn))
 
 type ArticleAPI
-   = AuthProtect "geopolitik-user" :> ("new" :> P NewArticle :<|> "draft" :> DraftAPI)
+   = AuthProtect "geopolitik-user" :> 
+     ( "new" :> P NewArticle 
+  :<|> "draft" :> DraftAPI 
+  :<|> "collaborator" :> CollaboratorAPI )
 
 type DraftAPI
      = "new" :> P NewDraft 
@@ -32,6 +35,9 @@ type DraftAPI
   :<|> "link" :> P LinkDraft 
   :<|> "latest" :> G "article-key" LatestDraft 
   :<|> Capture "username" Text :> Capture "article-name" Text :> Get '[ JSON] (Response LatestDraft)
+
+type CollaboratorAPI
+  = "add" :> P AddCollaborator
 
 type Ctx = AuthHandler Wai.Request User ': '[]
 
@@ -121,5 +127,15 @@ data LinkDraft = LinkDraft
   deriving anyclass (FromJSON, ToJSON)
 
 data instance Response LinkDraft = Linked
+  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data AddCollaborator = AddCollaborator
+  { addCollaboratorUsername :: Text
+  , addCollaboratorArticle :: Key Article
+  } deriving (Eq, Generic)
+    deriving anyclass (FromJSON, ToJSON)
+
+data instance Response AddCollaborator = AddedCollaborator
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)

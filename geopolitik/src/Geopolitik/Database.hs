@@ -11,7 +11,6 @@ import Control.Monad.Trans.Reader (ReaderT(..))
 import Control.Monad.Reader.Class
 import Control.Monad.Catch
 import Data.Text (Text)
-import qualified Data.Text.IO as T
 import Control.Monad.Except
 import Control.Applicative
 
@@ -83,9 +82,7 @@ insertExecutedMigrations executedMigrations = do
   void . liftIO $ executeMany c [sql|
     insert into executed_migrations (id, file_name)
     values (?, ?);
-  |] ((\ExecutedMigration{..} ->
-     (executedMigrationFilePath, executedMigrationTimestamp))
-     <$> executedMigrations)
+  |] executedMigrations
 
 insertLinks :: MonadIO m => [Link] -> DatabaseT m ()
 insertLinks links = do
@@ -95,6 +92,15 @@ insertLinks links = do
     values (?, ?, ?, ?);
   |] links
 
+insertCollaborators :: MonadIO m => [Collaborator] -> DatabaseT m ()
+insertCollaborators collaborators = do
+  c <- ask
+  void . liftIO $ executeMany c [sql|
+    insert into collaborators (id, article, collaborator, creation_date)
+         values (?, ?, ?, ?)
+  |] collaborators
+
+-- TODO make not awful
 insertLocation :: MonadIO m => Location -> DatabaseT m ()
 insertLocation Location{locationSpot = Coordinate x y, ..} = do
   c <- ask
@@ -103,10 +109,19 @@ insertLocation Location{locationSpot = Coordinate x y, ..} = do
     values (?, ?, ?, |] <> fromString ("'POINT(" <> show x <> " " <> show y <> ")'") <> [sql|, ?)
   |]) (locationID, locationName, locationDescription, locationCreationDate)
 
+isCollaborator :: MonadIO m => Key User -> Key Article -> DatabaseT m (Maybe Bool)
+isCollaborator collaborator article = do
+  c <- ask
+  liftIO $ query c [sql|
+    select * from collaborators where collaborator = ? and article = ?;
+  |] (collaborator, article) >>= \case
+    [Collaborator{}] -> return (Just True)
+    [] ->  return (Just False)
+    _ -> return Nothing
+
 validateToken :: MonadIO m => Text -> DatabaseT m (Maybe User)
 validateToken token = do
   c <- ask
-  liftIO $ T.putStrLn token
   (liftIO $ query c [sql|
     select users.id, username, password, users.creation_date 
     from users

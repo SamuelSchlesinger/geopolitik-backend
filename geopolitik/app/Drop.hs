@@ -18,6 +18,7 @@ main = runDatabaseT testInfo do
      drop table links;
      drop table locations;
      drop table comments;
+     drop table collaborators;
      drop extension postgis;
     |]
 

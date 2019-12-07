@@ -83,8 +83,17 @@ data Comment = Comment
   { commentID :: Key Comment
   , commentAuthor :: Key User
   , commentContent :: Text 
+  , commentCreationDate :: UTCTime
   } deriving stock (Generic, Eq, Show, Read, Ord)
     deriving anyclass (ToRow, FromRow, ToJSON, FromJSON) 
+
+data Collaborator = Collaborator
+  { collaboratorID :: Key Collaborator
+  , collaboratorArticle :: Key Article
+  , collaboratorUser :: Key User
+  , collaboratorCreationDate :: UTCTime 
+  } deriving stock (Generic, Eq, Show, Read, Ord)
+    deriving anyclass (ToRow, FromRow, ToJSON, FromJSON)
 
 data Tag a where
   ArticleTag :: Tag Article
@@ -103,7 +112,8 @@ data Link = Link
   { linkID :: Key Link
   , linkTag :: SomeTag
   , linkDraft :: Key Draft
-  , linkEntity :: Key Void }
+  , linkEntity :: Key Void 
+  , linkCreationDate :: UTCTime }
   deriving stock (Generic)
   deriving anyclass (FromJSON, ToRow, FromRow, ToJSON)
 

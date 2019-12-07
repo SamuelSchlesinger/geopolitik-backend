@@ -96,18 +96,21 @@ newToken User {..} = do
   signin $ SignIn username password
 
 article :: ServerT ArticleAPI M
-article user = newArticle user :<|> draft user
+article user = newArticle user :<|> draft user :<|> collaborator user
 
 newArticle :: User -> NewArticle -> DatabaseT Handler (Response NewArticle)
 newArticle User {userID = articleOwner} (NewArticle articleName) = do
   articleCreationDate <- liftIO getCurrentTime
   articleID <- liftIO ((Key . toText) <$> randomIO)
   insertArticles [Article {..}]
+  collaboratorID <- liftIO ((Key . toText) <$> randomIO)
+  insertCollaborators [Collaborator collaboratorID articleID articleOwner articleCreationDate]
   return (ArticleCreated articleID)
 
 link :: User -> LinkDraft -> DatabaseT Handler (Response LinkDraft)
 link u@User {..} (LinkDraft linkDraft (SomeTag tag) linkEntity) = do
   linkAuth u tag linkDraft (obvious tag linkEntity)
+  linkCreationDate <- liftIO getCurrentTime
   linkID <- liftIO ((Key . toText) <$> randomIO)
   let linkTag = SomeTag tag
   insertLinks [Link {..}]
@@ -158,3 +161,22 @@ latest' _ username articleName =
       LatestDraftFound draftID draftAuthor draftContents draftCreationDate
     Nothing -> throwError err404
       { errReasonPhrase = "Latest draft not found" }
+
+collaborator :: User -> ServerT CollaboratorAPI M
+collaborator user = addCollaborator user
+
+addCollaborator :: User -> AddCollaborator -> M (Response AddCollaborator)
+addCollaborator User{..} AddCollaborator{..} = do
+  collaboratorAuth userID addCollaboratorArticle
+  lookupUsersByUsername [addCollaboratorUsername] >>= \case
+    [User collaboratorUserID _ _ _ ] -> do
+      collaboratorID <- liftIO ((Key . toText) <$> randomIO)
+      creationDate <- liftIO getCurrentTime
+      insertCollaborators [Collaborator collaboratorID addCollaboratorArticle collaboratorUserID creationDate ]
+      return AddedCollaborator
+    [] -> throwError err404
+      { errReasonPhrase = "User does not exist" }
+    _ -> throwError err500
+      { errReasonPhrase = "Database is in an invalid state: addCollaborator" }
+
+

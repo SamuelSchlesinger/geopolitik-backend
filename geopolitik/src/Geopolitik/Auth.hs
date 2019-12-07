@@ -67,12 +67,30 @@ draftAuth
      -> Key Article 
      -> DatabaseT m ()
 draftAuth User{..} article = lookupArticles [article] >>= \case
-  [ Article{..} ] -> 
-    if articleOwner == userID
-      then return ()
-      else throwError err403
-        { errReasonPhrase = "Article not owned by user" }
+  [ Article{..} ] ->  
+    isCollaborator userID article >>= \case
+      Just True -> return ()
+      Just False -> throwError err403
+        { errReasonPhrase = "User is not a collaborator on this article" }
+      Nothing -> throwError err500
+        { errReasonPhrase = "Invalid database state: draftAuth (A)" }
   [] -> throwError err404 
     { errReasonPhrase = "Article does not exist" }
   _ -> throwError err500
-    { errReasonPhrase = "Invalid database state: draftAuth" }
+    { errReasonPhrase = "Invalid database state: draftAuth (B)" }
+
+collaboratorAuth 
+  :: ( MonadError ServerError m
+     , MonadIO m
+     , MonadCatch m )
+     => Key User -> Key Article -> DatabaseT m ()
+collaboratorAuth user article = lookupArticles [article] >>= \case
+  [ Article{..} ] -> 
+    if articleOwner == user 
+      then return ()
+      else throwError err403
+        { errReasonPhrase = "User is not the owner of this article" }
+  [] -> throwError err404
+    { errReasonPhrase = "Article does not exist" }
+  _ -> throwError err500
+    { errReasonPhrase = "Invalid database state: collaboratorAuth" } 
