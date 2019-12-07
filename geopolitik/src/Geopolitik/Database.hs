@@ -1,8 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Geopolitik.Database where
 
-import Data.Time.Clock
-import Data.ByteString (ByteString)
 import Geopolitik.Ontology
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
@@ -13,6 +11,7 @@ import Control.Monad.Trans.Reader (ReaderT(..))
 import Control.Monad.Reader.Class
 import Control.Monad.Catch
 import Data.Text (Text)
+import qualified Data.Text.IO as T
 import Control.Monad.Except
 
 testInfo :: ConnectInfo
@@ -103,18 +102,17 @@ insertLocation Location{locationSpot = Coordinate x y, ..} = do
     values (?, ?, ?, |] <> fromString ("'POINT(" <> show x <> " " <> show y <> ")'") <> [sql|, ?)
   |]) (locationID, locationName, locationDescription, locationCreationDate)
 
-validateToken :: MonadIO m => ByteString -> DatabaseT m (Maybe User)
+validateToken :: MonadIO m => Text -> DatabaseT m (Maybe User)
 validateToken token = do
   c <- ask
-  present <- liftIO getCurrentTime
-  let past = addUTCTime (secondsToNominalDiffTime (-30 * 60)) present
+  liftIO $ T.putStrLn token
   (liftIO $ query c [sql|
     select users.id, username, password, users.creation_date 
     from users
     inner join sessions on owner=users.id
-                        and token=?
-    where sessions.creation_date between ? and ?;
-    |] (token, past, present)) >>= \case
+                        and token in ?
+                      where sessions.creation_date >= now() - interval '1 hour';
+    |] (Only (In [token]))) >>= \case
       [] -> do
         return Nothing
       [s] -> do

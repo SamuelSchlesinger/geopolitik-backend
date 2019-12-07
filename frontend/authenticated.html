@@ -3,24 +3,19 @@
     <title>Geopolitik</title>
   <script language="JavaScript">
     function newarticle(form) {
-      var xhttp = new XMLHttpRequest();
-      var url = '/article/new'
-      xhttp.open('POST', url);
-      xhttp.withCredentials = true;
-      xhttp.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
-      xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          window.location.href = 'newdraft.html'
-          var para = document.createElement("p");
-          var node = document.createTextNode(this.response);
-          para.appendChild(node);
-
-          var element = document.getElementById("body");
-          element.appendChild(para);
+      console.log(form.articlename.value);
+      fetch('/article/new', 
+        { method: 'post'
+        , credentials: 'include'
+        , headers: {
+            'Content-Type': 'application/json'
         }
-      }
-      var req = form.articlename.value;
-      xhttp.send(req);
+          , body: JSON.stringify(form.articlename.value)
+        }).then(function (data) {
+          console.log(data);
+        }).catch(function(res) {
+
+        });
     }
   </script>
     
@@ -28,6 +23,6 @@
 
   <form name="geopolitik-new-article" action="" method="post">
     New Article Name: <input type="text" name="articlename"> <br>
-    <input type="button" value="Create" method="post" onClick="newarticle(this.form)">
+    <input type="button" value="Create" onClick="newarticle(this.form)">
   </form>
 </html>

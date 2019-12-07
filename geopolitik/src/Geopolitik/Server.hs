@@ -42,8 +42,7 @@ ctx conn = mkAuthHandler validate :. EmptyContext
              err401
                {errReasonPhrase = "You don't have a geopolitik-user cookie"})
           return $
-        lookup "geopolitik-user" $ parseCookies cookie
-      liftIO $ print token
+        lookup "geopolitik-user" $ parseCookiesText cookie
       maybe
         (throwError err401 {errReasonPhrase = "Could not validate token"})
         return =<<
@@ -82,6 +81,7 @@ signin (SignIn username password) =
                  { setCookieName = "geopolitik-user"
                  , setCookieSameSite = Just sameSiteStrict
                  , setCookieMaxAge = Nothing
+                 , setCookieHttpOnly = True
                  , setCookiePath = Just "/"
                  , setCookieValue = encodeUtf8 sessionToken
                  }) $
