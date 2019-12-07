@@ -18,12 +18,10 @@ and get rid of them all.
 ```bash
 stack run drop
 ```
-
 Finally, to run the server on port 8080, you can run the command:
 ```bash
 stack run geopolitik
 ```
-
 
 ## Architecture
 
