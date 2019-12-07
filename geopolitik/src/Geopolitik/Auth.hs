@@ -8,7 +8,12 @@ import Data.Text (unpack)
 import Control.Monad.Catch
 
 exists :: (MonadIO m, MonadError ServerError m, MonadCatch m) => Tag a -> Key a -> DatabaseT m ()
-exists tag k = lookupEntities tag [k] >>= \case { [_] -> return (); _ -> throwError err404 }
+exists tag k = lookupEntities tag [k] >>= \case 
+  [_] -> return ()
+  [] -> throwError err404
+    { errReasonPhrase = "Entity does not exist" }
+  _ -> throwError err500
+    { errReasonPhrase = "Invalid database state: exists " <> show tag }
 
 linkAuth :: (MonadCatch m, MonadError ServerError m, MonadIO m) => User -> Tag a -> Key Draft -> Key a -> DatabaseT m () 
 linkAuth User{..} tag draftKey entity 
@@ -53,3 +58,21 @@ draftExistsCheck reasonPrefix draftKey = lookupDrafts [draftKey] >>= \case
     { errReasonPhrase = reasonPrefix 
                      <> ": Could not find draft with key " 
                      <> unpack (getKey draftKey) }
+
+draftAuth 
+  :: ( MonadError ServerError m
+     , MonadIO m 
+     , MonadCatch m ) 
+     => User 
+     -> Key Article 
+     -> DatabaseT m ()
+draftAuth User{..} article = lookupArticles [article] >>= \case
+  [ Article{..} ] -> 
+    if articleOwner == userID
+      then return ()
+      else throwError err403
+        { errReasonPhrase = "Article not owned by user" }
+  [] -> throwError err404 
+    { errReasonPhrase = "Article does not exist" }
+  _ -> throwError err500
+    { errReasonPhrase = "Invalid database state: draftAuth" }

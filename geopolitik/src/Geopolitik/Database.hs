@@ -13,6 +13,7 @@ import Control.Monad.Catch
 import Data.Text (Text)
 import qualified Data.Text.IO as T
 import Control.Monad.Except
+import Control.Applicative
 
 testInfo :: ConnectInfo
 testInfo = ConnectInfo { 
@@ -34,7 +35,7 @@ runSharedDatabaseT :: (MonadIO m, MonadMask m) => Connection -> DatabaseT m a ->
 runSharedDatabaseT i (DatabaseT (ReaderT r)) = r i
 
 newtype DatabaseT m a = DatabaseT { unDatabaseT :: ReaderT Connection m a }
-  deriving newtype (MonadReader Connection, Monad, Functor, Applicative, MonadIO, MonadTrans, MonadMask, MonadThrow, MonadCatch)
+  deriving newtype (MonadReader Connection, Monad, Functor, Applicative, MonadIO, MonadTrans, MonadMask, MonadThrow, MonadCatch, Alternative, MonadPlus)
 
 instance (MonadError e m, MonadCatch m, Exception e) => MonadError e (DatabaseT m) where
   throwError = lift . throwError
@@ -139,6 +140,15 @@ lookupArticles articles = do
   liftIO $ query c [sql|
      select * from articles where id in ?;
     |] (Only (In articles))
+
+lookupArticleByName :: MonadIO m => User -> Text -> DatabaseT m (Maybe Article)
+lookupArticleByName User{..} articleName = do
+  c <- ask
+  liftIO $ query c [sql|
+     select * from articles where owner = ? and name = ?;
+    |] (userID, articleName) >>= \case
+    [a] -> return (Just a)
+    _ -> return Nothing
 
 lookupExecutedMigrations :: MonadIO m => [FilePath] -> DatabaseT m [ExecutedMigration]
 lookupExecutedMigrations names = do

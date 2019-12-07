@@ -135,6 +135,7 @@ comments _ (DraftComments draftKey) = do
 
 newDraft :: User -> NewDraft -> M (Response NewDraft)
 newDraft u@User {userID = draftAuthor} (NewDraft draftArticle draftContents) = do
+  draftAuth u draftArticle
   draftCreationDate <- liftIO getCurrentTime
   draftID <- liftIO ((Key . toText) <$> randomIO)
   insertDraft u Draft {..}
@@ -146,7 +147,8 @@ latest _ (LatestDraft articleKey) =
     Just Draft {..} ->
       return $
       LatestDraftFound draftID draftAuthor draftContents draftCreationDate
-    Nothing -> return LatestDraftNotFound
+    Nothing -> throwError err404
+      { errReasonPhrase = "Latest draft not found" }
 
 latest' :: User -> Text -> Text -> M (Response LatestDraft)
 latest' _ username articleName =
@@ -154,4 +156,5 @@ latest' _ username articleName =
     Just Draft {..} ->
       return $
       LatestDraftFound draftID draftAuthor draftContents draftCreationDate
-    Nothing -> return LatestDraftNotFound
+    Nothing -> throwError err404
+      { errReasonPhrase = "Latest draft not found" }

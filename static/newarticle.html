@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <title>Geopolitik</title>
+  <script language="JavaScript">
+    function newarticle(form) {
+      console.log(form.articlename.value);
+      fetch('/article/new', 
+        { method: 'post'
+        , credentials: 'include'
+        , headers: {
+            'Content-Type': 'application/json'
+        }
+        , body: JSON.stringify(form.articlename.value)
+        }).then(res => res.json())
+          .then(function (data) {
+          fetch ('/article/draft/new',
+            { method: 'post'
+            , credentials: 'include'
+            , headers: {
+                'Content-Type': 'application/json'
+            }
+            , body: JSON.stringify({
+              newDraftArticle: data,
+              newDraftContents: form.contents.value
+              })
+            }).then(function (data) {
+                console.log('Great success!');
+            }).catch(function (res) {
+
+            })
+        }).catch(function(res) {
+
+        });
+    }
+  </script>
+    
+  </head>
+
+  <form name="geopolitik-new-article" action="" method="post">
+    New Article Name: <input type="text" name="articlename"> <br>
+    First Draft Contents: <input type="text" name="contents"> <br>
+    <input type="button" value="Create" onClick="newarticle(this.form)">
+  </form>
+</html>
