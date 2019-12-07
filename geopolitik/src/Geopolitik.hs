@@ -10,6 +10,7 @@ import Control.Monad.Trans
 import System.Posix.User
 import System.Directory
 import System.Environment
+import Network.Wai.Middleware.RequestLogger
 
 main :: IO ()
 main = do
@@ -31,11 +32,9 @@ main = do
                    (runSharedDatabaseT conn) 
                    server)
     let settings = setOnException errorPrinter $ setPort 8080 defaultSettings
-    liftIO (runSettings settings app)
+    liftIO (runSettings settings $ logStdoutDev app)
 
 errorPrinter :: (Show a, Show b) => a -> b -> IO ()
-errorPrinter sr ex = do
-  putStr "This request: "
-  print sr
-  putStr "Fails with this exception: "
+errorPrinter _ ex = do
+  putStr "EXCEPTION:"
   print ex

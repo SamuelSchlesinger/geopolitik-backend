@@ -4,3 +4,5 @@ create table articles (
   owner text not null references users(id) on delete cascade,
   creation_date timestamp with time zone not null
 );
+
+create unique index name_owner_pair_unique on articles(name, owner);

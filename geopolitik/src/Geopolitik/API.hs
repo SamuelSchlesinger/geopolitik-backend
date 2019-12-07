@@ -51,7 +51,9 @@ type C req = ReqBody '[JSON] req
 
 type S res = Post '[JSON] (H res) 
 
-type H res = Headers '[Header "Set-Cookie" SetCookie, Header "Access-Control-Allow-Origin" Bool, Header "Access-Control-Origin" String] res
+type H res = Headers '[ Header "Set-Cookie" SetCookie
+                      , Header "Access-Control-Allow-Origin" String
+                      , Header "Access-Control-Allow-Credentials" Bool ] res
 
 data SignUp = SignUp 
   { signUpUsername :: Text
@@ -59,7 +61,7 @@ data SignUp = SignUp
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-data instance Response SignUp = SignedUp | SignUpFailure
+data instance Response SignUp = SignedUp
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
@@ -69,7 +71,7 @@ data SignIn = SignIn
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-data instance Response SignIn = SignedIn
+data instance Response SignIn = SignedIn Text
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
@@ -77,7 +79,7 @@ newtype NewArticle = NewArticle
   { newArticleName :: Text }
   deriving newtype (Eq, Ord, Show, Read, FromJSON, ToJSON)
 
-data instance Response NewArticle = ArticleCreated (Key Article) | ArticleCreationFailure
+data instance Response NewArticle = ArticleCreated (Key Article)
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
@@ -112,6 +114,6 @@ data LinkDraft = LinkDraft
   } deriving stock (Eq, Generic)
     deriving anyclass (FromJSON, ToJSON)
 
-data instance Response LinkDraft = Linked | LinkDraftFailure
+data instance Response LinkDraft = Linked
   deriving stock (Eq, Ord, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)

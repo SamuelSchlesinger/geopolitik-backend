@@ -10,6 +10,7 @@ library:
   source-dirs:
     - src
   dependencies:
+    - wai-extra
     - directory
     - unix
     - optparse-applicative

@@ -7,3 +7,5 @@ create table links (
   draft text not null references drafts(id) on delete cascade,
   entity text not null
 );
+
+create index entity_index on links(entity)

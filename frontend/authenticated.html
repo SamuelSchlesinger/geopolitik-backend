@@ -5,7 +5,7 @@
     function newarticle(form) {
       var xhttp = new XMLHttpRequest();
       var url = '/article/new'
-      xhttp.open('POST', url, true);
+      xhttp.open('POST', url);
       xhttp.withCredentials = true;
       xhttp.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
       xhttp.onreadystatechange = function() {
@@ -19,8 +19,7 @@
           element.appendChild(para);
         }
       }
-      let req = JSON.stringify(form.articlename.value)
-      console.log(req);
+      var req = form.articlename.value;
       xhttp.send(req);
     }
   </script>

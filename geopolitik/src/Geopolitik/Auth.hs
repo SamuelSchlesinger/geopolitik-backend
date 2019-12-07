@@ -19,12 +19,37 @@ linkAuth User{..} tag draftKey entity
       LocationTag -> draftAuthorCheck "Link Location" userID draftKey
       DraftTag -> draftAuthorCheck "Link Draft" userID draftKey
 
-draftAuthorCheck :: (MonadIO m, MonadError ServerError m, MonadCatch m) => String -> Key User -> Key Draft -> DatabaseT m ()
+draftAuthorCheck 
+  :: ( MonadIO m
+     , MonadError ServerError m
+     , MonadCatch m
+     ) => String 
+       -> Key User 
+       -> Key Draft 
+       -> DatabaseT m ()
 draftAuthorCheck reasonPrefix userID draftKey = lookupDrafts [draftKey] >>= \case
-  [ Draft{..} ] -> if draftAuthor == userID then return () else throwError err403 { errReasonPhrase = reasonPrefix <> ": You are not the author of draft with key " <> unpack (getKey draftKey) }
-  _       -> throwError err404 { errReasonPhrase = reasonPrefix <> ": Could not find draft with key " <> unpack (getKey draftKey) }
+  [ Draft{..} ] -> 
+    if draftAuthor == userID 
+      then return () 
+      else throwError err403 
+        { errReasonPhrase = reasonPrefix 
+                         <> ": You are not the author of draft with key " 
+                         <> unpack (getKey draftKey) }
+  _       -> throwError err404 
+        { errReasonPhrase = reasonPrefix 
+                         <> ": Could not find draft with key " 
+                         <> unpack (getKey draftKey) }
 
-draftExistsCheck :: (MonadIO m, MonadError ServerError m, MonadCatch m) => String -> Key Draft -> DatabaseT m ()
+draftExistsCheck 
+  :: ( MonadIO m
+     , MonadError ServerError m
+     , MonadCatch m
+     ) => String 
+       -> Key Draft 
+       -> DatabaseT m ()
 draftExistsCheck reasonPrefix draftKey = lookupDrafts [draftKey] >>= \case
   [ Draft{..} ] -> return ()
-  _ -> throwError err404 { errReasonPhrase = reasonPrefix <> ": Could not find draft with key " <> unpack (getKey draftKey) }
+  _ -> throwError err404 
+    { errReasonPhrase = reasonPrefix 
+                     <> ": Could not find draft with key " 
+                     <> unpack (getKey draftKey) }

@@ -1,16 +1,18 @@
 <html>
   <head>
     <title>Geopolitik</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script language="JavaScript">
     function signin(form) {
       var xhttp = new XMLHttpRequest();
       var url = '/account/signin'
-      xhttp.open('POST', url, true);
+      xhttp.open('POST', url);
       xhttp.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
+      xhttp.setRequestHeader('Accept', 'application/json');
       xhttp.withCredentials = true;
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-          window.location.href = 'authenticated.html'
+          document.token = this.responseText;
         }
       }
       let req = JSON.stringify({
@@ -21,7 +23,6 @@
       xhttp.send(req);
     }
   </script>
-    
   </head>
 
   <form name="geopolitik-sign-in" action="" method="post">

@@ -30,11 +30,12 @@ ctx :: Connection -> Context Ctx
 ctx conn = mkAuthHandler validate :. EmptyContext where
   validate :: Wai.Request -> Handler User
   validate req = do
-    cookie <- maybe (throwError err403) return 
+    cookie <- maybe (throwError err401 { errReasonPhrase = "You have no cookies" }) return 
       $ lookup "cookie" (Wai.requestHeaders req)
-    token <- maybe (throwError err403) return
+    token <- maybe (throwError err401 { errReasonPhrase = "You don't have a geopolitik-user cookie"}) return
       $ lookup "geopolitik-user" $ parseCookies cookie
-    maybe (throwError err401) return =<< runSharedDatabaseT conn (validateToken token) 
+    liftIO $ print token
+    maybe (throwError err401 { errReasonPhrase = "Could not validate token" }) return =<< runSharedDatabaseT conn (validateToken token) 
 
 server :: ServerT GeopolitikAPI M
 server = account :<|> article :<|> serveDirectoryWebApp "frontend" 
@@ -51,7 +52,7 @@ signup (SignUp username password)
         userID <- liftIO ((Key . toText) <$> randomIO)
         insertUsers [User{..}] 
         return SignedUp
-      _ -> throwError err403
+      _ -> throwError err403 { errReasonPhrase = "Username already exists" }
 
 signin :: SignIn -> M (H (Response SignIn))
 signin (SignIn username password)
@@ -65,13 +66,16 @@ signin (SignIn username password)
           insertSessions [sess]
           return $ addHeader (def 
                    { setCookieName = "geopolitik-user"
-                   , setCookieMaxAge = Just (60 * 30)
+                   , setCookieSameSite = Just sameSiteStrict
+                   , setCookieMaxAge = Nothing
+                   , setCookiePath = Just "../../"
+                   , setCookieHttpOnly = True
                    , setCookieValue = encodeUtf8 sessionToken }) 
+                 $ addHeader "http://localhost:8080"
                  $ addHeader True
-                 $ addHeader "*"
-                   SignedIn 
-        else throwError err403
-      _ -> throwError err403
+                 $ SignedIn sessionToken
+        else throwError err403 { errReasonPhrase = "Wrong password" }
+      _ -> throwError err403 { errReasonPhrase = "Wrong username" }
 
 newToken :: User -> M (H (Response SignIn))
 newToken User{..} = do

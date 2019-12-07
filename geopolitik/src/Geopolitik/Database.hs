@@ -93,7 +93,7 @@ insertLinks links = do
   void . liftIO $ executeMany c [sql|
     insert into links
     values (?, ?, ?, ?);
-  |] ((\Link{..} -> (linkID, linkTag, linkDraft, linkEntity)) <$> links)
+  |] links
 
 insertLocation :: MonadIO m => Location -> DatabaseT m ()
 insertLocation Location{locationSpot = Coordinate x y, ..} = do
@@ -113,7 +113,7 @@ validateToken token = do
     from users
     inner join sessions on owner=users.id
                         and token=?
-    where sessions.creation_date between ? and ?
+    where sessions.creation_date between ? and ?;
     |] (token, past, present)) >>= \case
       [] -> do
         return Nothing

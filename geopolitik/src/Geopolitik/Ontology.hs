@@ -105,7 +105,7 @@ data Link = Link
   , linkDraft :: Key Draft
   , linkEntity :: Key Void }
   deriving stock (Generic)
-  deriving anyclass (FromJSON, ToJSON)
+  deriving anyclass (FromJSON, ToRow, FromRow, ToJSON)
 
 -- AlWAYS put all of the tags here, this todo lives forever
 allTags :: [SomeTag]
