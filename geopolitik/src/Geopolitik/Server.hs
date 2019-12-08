@@ -178,5 +178,3 @@ addCollaborator User{..} AddCollaborator{..} = do
       { errReasonPhrase = "User does not exist" }
     _ -> throwError err500
       { errReasonPhrase = "Database is in an invalid state: addCollaborator" }
-
-
