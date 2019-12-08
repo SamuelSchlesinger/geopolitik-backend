@@ -84,6 +84,7 @@ data instance Response SignIn = SignedIn Text
 
 newtype NewArticle = NewArticle
   { newArticleName :: Text }
+  deriving stock (Generic)
   deriving newtype (Eq, Ord, Show, Read, FromJSON, ToJSON)
 
 data instance Response NewArticle 

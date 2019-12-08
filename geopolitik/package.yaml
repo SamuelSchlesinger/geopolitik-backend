@@ -65,6 +65,7 @@ executables:
   docs:
     main: 'app/Docs.hs'
     dependencies:
+      - lens
       - cookie
       - servant-docs
       - time

@@ -11,29 +11,18 @@ import Web.Cookie (SetCookie)
 import Data.Time.Clock
 import Servant
 import Data.Void
+import Control.Lens
 
 instance ToSample SignUp
 instance ToSample (Response SignUp)
 instance ToSample SignIn
 instance ToSample (Response SignIn)
 instance ToSample NewArticle where
-  toSamples Proxy = [("an article name", NewArticle "my brand new article")]
-
-instance ToSample (Key Draft) where
-  toSamples Proxy = [("draft key", Key "b00e6dec-fcb4-4e4a-a298-c5cac17e37e8")]
-
-instance ToSample (Key Article) where
-  toSamples Proxy = [("article key", Key "b00e6dec-fcb4-4e4a-a298-c5cac17e37e8")]
-
-instance ToSample (Key User) where
-  toSamples Proxy = [("user key", Key "b00e6dec-fcb4-4e4a-a298-c5cac17e37e8")]
-
-instance ToSample (Key Void) where
-  toSamples Proxy = []
-
-instance ToSample (Key Comment) where
-  toSamples Proxy = [("comment key", Key "b00e6dec-fcb4-4e4a-a298-c5cac17e37e8")]
-
+instance ToSample (Key Draft)
+instance ToSample (Key Article)
+instance ToSample (Key User)
+instance ToSample (Key Void)
+instance ToSample (Key Comment)
 instance ToSample (Response NewArticle)
 instance ToSample (Response LinkDraft)
 instance ToSample LinkDraft
@@ -63,11 +52,10 @@ instance ToSample (Response DraftComments)
 instance ToSample SomeTag where
   toSamples Proxy = [("an article tag", SomeTag ArticleTag)]
 
-instance ToSample () where
-  toSamples Proxy = []
+instance ToSample ()
 
 instance ToSample Text where
-  toSamples Proxy = [("some text", "as such")]
+  toSamples Proxy = [("text", "yes")]
 
 instance ToSample SetCookie where
   toSamples Proxy = []
@@ -80,7 +68,9 @@ instance ToSample Char where
 instance ToSample AddCollaborator
 
 instance HasDocs p => HasDocs (AuthProtect "geopolitik-user" :> p) where
-  docsFor Proxy = docsFor (Proxy @p)
+  docsFor Proxy (e, a) = docsFor (Proxy @p) (e, a & authInfo %~ (<> [geoAuthDoc])) where
+    geoAuthDoc :: DocAuthentication
+    geoAuthDoc = DocAuthentication "A simple HTTP-only session based authentication system" "A session cookie"
 
 main :: IO ()
 main = putStrLn . markdown . docs $ Proxy @GeopolitikAPI
