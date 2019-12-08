@@ -30,14 +30,14 @@ type ArticleAPI
   :<|> "collaborator" :> CollaboratorAPI )
 
 type DraftAPI
-     = "new" :> P NewDraft 
+     = "new" :> P NewDraft
   :<|> "comments" :> G "draft-key" DraftComments 
   :<|> "link" :> P LinkDraft 
   :<|> "latest" :> G "article-key" LatestDraft 
-  :<|> Capture "username" Text :> Capture "article-name" Text :> Get '[ JSON] (Response LatestDraft)
+  :<|> Capture "username" Text :> Capture "article-name" Text :> Get '[JSON] (Response LatestDraft)
 
 type CollaboratorAPI
-  = "add" :> P AddCollaborator
+    = "add" :> P AddCollaborator
 
 type Ctx = AuthHandler Wai.Request User ': '[]
 
