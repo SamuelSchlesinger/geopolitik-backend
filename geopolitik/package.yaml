@@ -62,6 +62,20 @@ executables:
       - geopolitik
       - base
     <<: *executable
+  docs:
+    main: 'app/Docs.hs'
+    dependencies:
+      - cookie
+      - servant-docs
+      - time
+      - servant-client
+      - servant-server
+      - base
+      - geopolitik
+      - transformers
+      - mtl
+      - text
+      - bytestring
 
 tests:
   test:

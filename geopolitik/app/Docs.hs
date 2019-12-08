@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Main where
 
 import Geopolitik.API
@@ -69,6 +71,13 @@ instance ToSample Text where
 
 instance ToSample SetCookie where
   toSamples Proxy = []
+
+instance ToSample (Response AddCollaborator)
+
+instance ToSample Char where
+  toSamples Proxy = [("", x) | x <- ['a'..'z']]
+
+instance ToSample AddCollaborator
 
 instance HasDocs p => HasDocs (AuthProtect "geopolitik-user" :> p) where
   docsFor Proxy = docsFor (Proxy @p)
