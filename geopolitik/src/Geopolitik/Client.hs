@@ -1,4 +1,12 @@
-module Geopolitik.Client where
+module Geopolitik.Client
+  ( signin
+  , signup
+  , newToken
+  , articleClient
+  , ArticleClient(..)
+  , CollaboratorClient(..)
+  , DraftClient(..)
+  ) where
 
 import Data.Proxy
 import Data.Text

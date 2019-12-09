@@ -1,4 +1,4 @@
-module Geopolitik.Server where
+module Geopolitik.Server (geopolitikProxy, ctx, ctxProxy, server) where
 
 import Control.Monad.Except
 import Data.Text (Text)

@@ -1,4 +1,4 @@
-module Geopolitik.Auth where
+module Geopolitik.Auth (linkAuth, draftAuth, collaboratorAuth) where
 
 import Control.Monad.Except
 import Data.Text (unpack)
