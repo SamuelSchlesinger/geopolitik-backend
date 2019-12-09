@@ -22,6 +22,8 @@ library:
     - optparse-applicative
     - postgresql-simple
     - random
+    - servant-client
+    - servant-client-core
     - servant-server
     - text
     - time
@@ -50,6 +52,7 @@ executables:
       - postgresql-simple
       - time
       - transformers
+      - unix
     <<: *executable
   migrate:
     main: 'app/Migrate.hs'
@@ -61,6 +64,7 @@ executables:
       - postgresql-simple
       - time
       - transformers
+      - unix
     <<: *executable
   docs:
     main: 'app/Docs.hs'

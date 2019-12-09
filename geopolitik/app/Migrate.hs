@@ -1,25 +1,28 @@
 module Main where
 
-import Data.String
-import Geopolitik.Database
-import Geopolitik.Ontology
-import Data.List
-import System.Environment
 import Control.Monad
+import Control.Monad.Catch
+import Control.Monad.Reader.Class
+import Control.Monad.Trans
+import Data.List
+import Data.String
+import Data.Time.Clock
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
-import Control.Monad.Trans
-import Control.Monad.Reader.Class
-import Data.Time.Clock
-import Control.Monad.Catch
+import Geopolitik.Database
+import Geopolitik.Ontology
+import System.Environment
+import System.Posix.User
 
 main :: IO ()
-main = runDatabaseT testInfo do
-  geopolitikLocation <- liftIO $ getEnv "GEOPOLITIK_LOCATION"
-  migrations <- lines <$> liftIO (readFile (geopolitikLocation <> "/geopolitik/migrations/manifest"))
-  executedMigrations <- catch (lookupExecutedMigrations migrations) (\(_ :: SomeException) -> return [])
-  let migrationsToRun = migrations \\ map executedMigrationFilePath executedMigrations
-  forM_ migrationsToRun runMigration
+main = do
+  username <- getEffectiveUserName
+  runDatabaseT (testInfo username) do
+    geopolitikLocation <- liftIO $ getEnv "GEOPOLITIK_LOCATION"
+    migrations <- lines <$> liftIO (readFile (geopolitikLocation <> "/geopolitik/migrations/manifest"))
+    executedMigrations <- catch (lookupExecutedMigrations migrations) (\(_ :: SomeException) -> return [])
+    let migrationsToRun = migrations \\ map executedMigrationFilePath executedMigrations
+    forM_ migrationsToRun runMigration
 
 runMigration :: FilePath -> DatabaseT IO ()
 runMigration filepath = do

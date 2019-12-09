@@ -24,10 +24,12 @@ type AccountAPI
   :<|> AuthProtect "geopolitik-user" :> ("new-token" :> S (Response SignIn))
 
 type ArticleAPI
-   = AuthProtect "geopolitik-user" :> 
-     ( "new" :> P NewArticle 
-  :<|> "draft" :> DraftAPI 
-  :<|> "collaborator" :> CollaboratorAPI )
+   = AuthProtect "geopolitik-user" :> UnauthenticatedArticleAPI 
+
+type UnauthenticatedArticleAPI
+    = "new" :> P NewArticle
+ :<|> "draft" :> DraftAPI
+ :<|> "collaborator" :> CollaboratorAPI 
 
 type DraftAPI
      = "new" :> P NewDraft
@@ -104,7 +106,7 @@ data instance Response NewDraft = DraftCreated
 
 newtype LatestDraft = LatestDraft
   { unLatestDraft :: Key Article }
-  deriving newtype (Eq, Ord, Show, Read, FromJSON, ToJSON, FromHttpApiData)
+  deriving newtype (Eq, Ord, Show, Read, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
 
 data instance  Response LatestDraft 
   = LatestDraftFound (Key Draft) (Key User) Text UTCTime
@@ -113,7 +115,7 @@ data instance  Response LatestDraft
 
 newtype DraftComments = DraftComments
   { unDraftComments :: Key Draft }
-  deriving newtype (Eq, Ord, Show, Read, FromJSON, ToJSON, FromHttpApiData)
+  deriving newtype (Eq, Ord, Show, Read, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
 
 data instance Response DraftComments 
   = DraftCommentsFound [Comment]

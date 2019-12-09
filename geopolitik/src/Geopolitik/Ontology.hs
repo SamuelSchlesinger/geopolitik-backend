@@ -16,7 +16,7 @@ import Servant hiding (Link)
 
 newtype Key a = Key { getKey :: Text }
   deriving stock   (Generic)
-  deriving newtype (FromHttpApiData, Eq, Show, Read, Ord, FromField, ToField, ToJSON, FromJSON)
+  deriving newtype (ToHttpApiData, FromHttpApiData, Eq, Show, Read, Ord, FromField, ToField, ToJSON, FromJSON)
 
 data User = User
   { userID :: Key User
