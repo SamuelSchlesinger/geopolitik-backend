@@ -6,9 +6,9 @@ business, geography.
 
 ## Installing/Running
 
-To run this on mac, you need to have PostgreSQL running locally on port 5432 with a database
-called "geopolitik", and you need to have the PostGIS extension installed, both of which are
-available via brew.
+To run this on any unix machine, you need to have PostgreSQL 
+running locally on port 5432 with a database called "geopolitik", and you need to have the 
+PostGIS extension installed, both of which are available via brew.
 ```bash
 export GEOPOLITIK_LOCATION=<this-folder>
 stack run migrate
@@ -32,6 +32,12 @@ me here if you are having troubles. The other way is a number of html pages
 which serve as basic tests of some of the endpoints. These go in a sequence
 from [signup](http://localhost:8080/signup.html).
 
-## Architecture
+## Module Structure
+
+I try to keep this photo updated with the current dependency graph of the
+modules in this project, so you can have an idea of how to explore it. That
+being said, I won't be describing the architecture here, as it is so prone
+to change and I don't want to have to update documentation no one is presently
+reading every time I change the architecture.
 
 ![Module Structure](mods.png)
