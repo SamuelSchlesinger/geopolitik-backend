@@ -1,11 +1,11 @@
 module Geopolitik.Auth where
 
-import Geopolitik.Ontology
-import Geopolitik.Database
-import Control.Monad.Except
-import Servant
-import Data.Text (unpack)
 import Control.Monad.Catch
+import Control.Monad.Except
+import Data.Text (unpack)
+import Geopolitik.Database
+import Geopolitik.Ontology
+import Servant
 
 exists :: (MonadIO m, MonadError ServerError m, MonadCatch m) => Tag a -> Key a -> DatabaseT m ()
 exists tag k = lookupEntities tag [k] >>= \case 
