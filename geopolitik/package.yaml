@@ -10,28 +10,28 @@ library:
   source-dirs:
     - src
   dependencies:
-    - wai-extra
-    - directory
-    - unix
-    - optparse-applicative
-    - cryptonite
-    - warp
     - aeson
-    - cookie
-    - wai
-    - random
-    - uuid
-    - geojson
-    - exceptions
-    - servant-server
-    - mtl
-    - transformers
-    - unordered-containers
-    - postgresql-simple
+    - base
     - bytestring
+    - cookie
+    - cryptonite
+    - directory
+    - exceptions
+    - geojson
+    - mtl
+    - optparse-applicative
+    - postgresql-simple
+    - random
+    - servant-server
     - text
     - time
-    - base
+    - transformers
+    - unix
+    - unordered-containers
+    - uuid
+    - wai
+    - wai-extra
+    - warp
   <<: *library
 
 executables:
@@ -43,40 +43,40 @@ executables:
   drop:
     main: 'app/Drop.hs'
     dependencies:
-      - geopolitik
-      - postgresql-simple
-      - mtl
-      - transformers
       - base
-      - time
       - exceptions
+      - geopolitik
+      - mtl
+      - postgresql-simple
+      - time
+      - transformers
     <<: *executable
   migrate:
     main: 'app/Migrate.hs'
     dependencies:
-      - time
-      - exceptions
-      - postgresql-simple
-      - mtl
-      - transformers
-      - geopolitik
       - base
+      - exceptions
+      - geopolitik
+      - mtl
+      - postgresql-simple
+      - time
+      - transformers
     <<: *executable
   docs:
     main: 'app/Docs.hs'
     dependencies:
-      - lens
-      - cookie
-      - servant-docs
-      - time
-      - servant-client
-      - servant-server
       - base
-      - geopolitik
-      - transformers
-      - mtl
-      - text
       - bytestring
+      - cookie
+      - geopolitik
+      - lens
+      - mtl
+      - servant-client
+      - servant-docs
+      - servant-server
+      - text
+      - time
+      - transformers
 
 tests:
   test:

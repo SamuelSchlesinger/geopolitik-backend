@@ -12,11 +12,11 @@ import Geopolitik.API
 import Geopolitik.Auth
 import Geopolitik.Database
 import Geopolitik.Ontology
-import qualified Network.Wai as Wai
 import Servant
 import Servant.Server.Experimental.Auth
 import System.Random
 import Web.Cookie
+import qualified Network.Wai as Wai
 
 type M = DatabaseT Handler
 

@@ -1,31 +1,30 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Geopolitik.Database where
 
-import Geopolitik.Ontology
+import Control.Applicative
+import Control.Monad
+import Control.Monad.Catch
+import Control.Monad.Except
+import Control.Monad.Reader.Class
+import Control.Monad.Trans.Reader (ReaderT(..))
+import Data.String
+import Data.Text (Text)
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
-import Control.Monad
-import Data.String
-import Control.Monad.Trans
-import Control.Monad.Trans.Reader (ReaderT(..))
-import Control.Monad.Reader.Class
-import Control.Monad.Catch
-import Data.Text (Text)
-import Control.Monad.Except
-import Control.Applicative
+import Geopolitik.Ontology
 
-testInfo :: ConnectInfo
-testInfo = ConnectInfo { 
+testInfo :: String -> ConnectInfo
+testInfo username = ConnectInfo { 
       connectHost = "localhost"
     , connectPort = 5432
-    , connectUser = "sam"
+    , connectUser = username
     , connectPassword = ""
     , connectDatabase = "geopolitik"
     }
 
-runTestDatabaseT :: (MonadIO m, MonadMask m) => DatabaseT m a -> m a
-runTestDatabaseT (DatabaseT (ReaderT r)) 
-  = bracket (liftIO (connect testInfo)) (liftIO . close) r
+runTestDatabaseT :: (MonadIO m, MonadMask m) => String -> DatabaseT m a -> m a
+runTestDatabaseT username (DatabaseT (ReaderT r)) 
+  = bracket (liftIO (connect (testInfo username))) (liftIO . close) r
 
 runDatabaseT :: (MonadIO m, MonadMask m) => ConnectInfo -> DatabaseT m a -> m a
 runDatabaseT i (DatabaseT (ReaderT r)) = bracket (liftIO $ connect i) (liftIO . close) r

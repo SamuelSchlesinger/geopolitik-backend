@@ -8,10 +8,10 @@ import Data.Time.Clock (UTCTime)
 import Data.Void
 import GHC.Generics (Generic)
 import Geopolitik.Ontology
-import qualified Network.Wai as Wai
 import Servant
 import Servant.Server.Experimental.Auth
 import Web.Cookie
+import qualified Network.Wai as Wai
 
 type GeopolitikAPI
      = "account" :> AccountAPI 

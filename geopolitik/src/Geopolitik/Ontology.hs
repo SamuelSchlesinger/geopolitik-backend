@@ -3,15 +3,15 @@
 {-# LANGUAGE DeriveAnyClass #-}
 module Geopolitik.Ontology where
 
+import Data.Aeson
+import Data.Text
+import Data.Text.Read
 import Data.Time.Clock (UTCTime)
-import GHC.Generics (Generic)
+import Data.Void
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
-import Data.Aeson
-import Data.Text.Read
-import Data.Text
-import Data.Void
+import GHC.Generics (Generic)
 import Servant hiding (Link)
 
 newtype Key a = Key { getKey :: Text }
