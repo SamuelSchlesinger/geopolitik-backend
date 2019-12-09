@@ -1,7 +1,6 @@
 module Geopolitik.Server where
 
-import Control.Monad.Reader.Class
-import Control.Monad.Trans
+import Control.Monad.Except
 import Data.Text (Text)
 import Data.Text.Encoding
 import Data.Time.Clock
@@ -12,13 +11,12 @@ import Geopolitik.API
 import Geopolitik.Auth
 import Geopolitik.Database
 import Geopolitik.Ontology
+import Geopolitik.Monad
 import Servant
 import Servant.Server.Experimental.Auth
 import System.Random
 import Web.Cookie
 import qualified Network.Wai as Wai
-
-type M = DatabaseT Handler
 
 geopolitikProxy :: Proxy GeopolitikAPI
 geopolitikProxy = Proxy
@@ -31,30 +29,23 @@ ctx conn = mkAuthHandler validate :. EmptyContext
   where
     validate :: Wai.Request -> Handler User
     validate req = do
-      cookie <-
-        maybe
+      cookie <- maybe
           (throwError err401 {errReasonPhrase = "You have no cookies"})
-          return $
-        lookup "cookie" (Wai.requestHeaders req)
-      token <-
-        maybe
-          (throwError
-             err401
-               {errReasonPhrase = "You don't have a geopolitik-user cookie"})
-          return $
-        lookup "geopolitik-user" $ parseCookiesText cookie
+          return $ lookup "cookie" (Wai.requestHeaders req)
+      token <- maybe
+          (throwError err401 {errReasonPhrase = "You don't have a geopolitik-user cookie"})
+          return $ lookup "geopolitik-user" $ parseCookiesText cookie
       maybe
         (throwError err401 {errReasonPhrase = "Could not validate token"})
-        return =<<
-        runSharedDatabaseT conn (validateToken token)
+        return =<< runSharedDatabaseT conn (validateToken token)
 
-server :: ServerT GeopolitikAPI M
+server :: MonadGeopolitik m => ServerT GeopolitikAPI m
 server = account :<|> article :<|> serveDirectoryWebApp "static"
 
-account :: ServerT AccountAPI M
+account :: MonadGeopolitik m => ServerT AccountAPI m
 account = signup :<|> signin :<|> newToken
 
-signup :: SignUp -> M (Response SignUp)
+signup :: MonadGeopolitik m => SignUp -> m (Response SignUp)
 signup (SignUp username password) = do
   lookupUsersByUsername [username] >>= \case
     [] -> do
@@ -64,7 +55,7 @@ signup (SignUp username password) = do
       return SignedUp
     _ -> throwError err403 {errReasonPhrase = "Username already exists"}
 
-signin :: SignIn -> M (H (Response SignIn))
+signin :: MonadGeopolitik m => SignIn -> m (H (Response SignIn))
 signin (SignIn username password) =
   lookupUsersByUsername [username] >>= \case
     [User {userID = sessionOwner, password = userPassword}] -> do
@@ -91,14 +82,14 @@ signin (SignIn username password) =
         else throwError err403 {errReasonPhrase = "Wrong password"}
     _ -> throwError err403 {errReasonPhrase = "Wrong username"}
 
-newToken :: User -> M (H (Response SignIn))
+newToken :: MonadGeopolitik m => User -> m (H (Response SignIn))
 newToken User {..} = do
   signin $ SignIn username password
 
-article :: ServerT ArticleAPI M
+article :: MonadGeopolitik m => ServerT ArticleAPI m
 article user = newArticle user :<|> draft user :<|> collaborator user
 
-newArticle :: User -> NewArticle -> DatabaseT Handler (Response NewArticle)
+newArticle :: MonadGeopolitik m => User -> NewArticle -> m (Response NewArticle)
 newArticle User {userID = articleOwner} (NewArticle articleName) = do
   articleCreationDate <- liftIO getCurrentTime
   articleID <- liftIO ((Key . toText) <$> randomIO)
@@ -107,7 +98,7 @@ newArticle User {userID = articleOwner} (NewArticle articleName) = do
   insertCollaborators [Collaborator collaboratorID articleID articleOwner articleCreationDate]
   return (ArticleCreated articleID)
 
-link :: User -> LinkDraft -> DatabaseT Handler (Response LinkDraft)
+link :: MonadGeopolitik m => User -> LinkDraft -> m (Response LinkDraft)
 link u@User {..} (LinkDraft linkDraft (SomeTag tag) linkEntity) = do
   linkAuth u tag linkDraft (obvious tag linkEntity)
   linkCreationDate <- liftIO getCurrentTime
@@ -116,14 +107,13 @@ link u@User {..} (LinkDraft linkDraft (SomeTag tag) linkEntity) = do
   insertLinks [Link {..}]
   return Linked
 
-draft :: User -> ServerT DraftAPI M
+draft :: MonadGeopolitik m => User -> ServerT DraftAPI m
 draft user =
   newDraft user :<|> comments user :<|> link user :<|> latest user :<|>
   latest' user
 
-comments :: User -> DraftComments -> M (Response DraftComments)
-comments _ (DraftComments draftKey) = do
-  c <- ask
+comments :: MonadGeopolitik m => User -> DraftComments -> m (Response DraftComments)
+comments _ (DraftComments draftKey) = withConnection \c -> do
   fmap DraftCommentsFound $
     liftIO $
     query
@@ -136,7 +126,7 @@ comments _ (DraftComments draftKey) = do
     |]
       (Only (In [draftKey]))
 
-newDraft :: User -> NewDraft -> M (Response NewDraft)
+newDraft :: MonadGeopolitik m => User -> NewDraft -> m (Response NewDraft)
 newDraft u@User {userID = draftAuthor} (NewDraft draftArticle draftContents) = do
   draftAuth u draftArticle
   draftCreationDate <- liftIO getCurrentTime
@@ -144,16 +134,14 @@ newDraft u@User {userID = draftAuthor} (NewDraft draftArticle draftContents) = d
   insertDraft u Draft {..}
   return DraftCreated
 
-latest :: User -> LatestDraft -> M (Response LatestDraft)
+latest :: MonadGeopolitik m => User -> LatestDraft -> m (Response LatestDraft)
 latest _ (LatestDraft articleKey) =
   latestDraft articleKey >>= \case
-    Just Draft {..} ->
-      return $
-      LatestDraftFound draftID draftAuthor draftContents draftCreationDate
+    Just Draft {..} -> return $ LatestDraftFound draftID draftAuthor draftContents draftCreationDate
     Nothing -> throwError err404
       { errReasonPhrase = "Latest draft not found" }
 
-latest' :: User -> Text -> Text -> M (Response LatestDraft)
+latest' :: MonadGeopolitik m => User -> Text -> Text -> m (Response LatestDraft)
 latest' _ username articleName =
   latestDraft' username articleName >>= \case
     Just Draft {..} ->
@@ -162,10 +150,10 @@ latest' _ username articleName =
     Nothing -> throwError err404
       { errReasonPhrase = "Latest draft not found" }
 
-collaborator :: User -> ServerT CollaboratorAPI M
+collaborator :: MonadGeopolitik m => User -> ServerT CollaboratorAPI m
 collaborator user = addCollaborator user
 
-addCollaborator :: User -> AddCollaborator -> M (Response AddCollaborator)
+addCollaborator :: MonadGeopolitik m => User -> AddCollaborator -> m (Response AddCollaborator)
 addCollaborator User{..} AddCollaborator{..} = do
   collaboratorAuth userID addCollaboratorArticle
   lookupUsersByUsername [addCollaboratorUsername] >>= \case

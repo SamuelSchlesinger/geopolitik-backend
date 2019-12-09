@@ -1,13 +1,13 @@
 module Geopolitik.Auth where
 
-import Control.Monad.Catch
 import Control.Monad.Except
 import Data.Text (unpack)
 import Geopolitik.Database
 import Geopolitik.Ontology
+import Geopolitik.Monad
 import Servant
 
-exists :: (MonadIO m, MonadError ServerError m, MonadCatch m) => Tag a -> Key a -> DatabaseT m ()
+exists :: MonadGeopolitik m => Tag a -> Key a -> m ()
 exists tag k = lookupEntities tag [k] >>= \case 
   [_] -> return ()
   [] -> throwError err404
@@ -15,7 +15,7 @@ exists tag k = lookupEntities tag [k] >>= \case
   _ -> throwError err500
     { errReasonPhrase = "Invalid database state: exists " <> show tag }
 
-linkAuth :: (MonadCatch m, MonadError ServerError m, MonadIO m) => User -> Tag a -> Key Draft -> Key a -> DatabaseT m () 
+linkAuth :: MonadGeopolitik m => User -> Tag a -> Key Draft -> Key a -> m () 
 linkAuth User{..} tag draftKey entity 
   = exists tag entity >> case tag of
       ArticleTag -> draftAuthorCheck "Link Article" userID draftKey
@@ -25,13 +25,11 @@ linkAuth User{..} tag draftKey entity
       DraftTag -> draftAuthorCheck "Link Draft" userID draftKey
 
 draftAuthorCheck 
-  :: ( MonadIO m
-     , MonadError ServerError m
-     , MonadCatch m
-     ) => String 
+  :: MonadGeopolitik m 
+       => String 
        -> Key User 
        -> Key Draft 
-       -> DatabaseT m ()
+       -> m ()
 draftAuthorCheck reasonPrefix userID draftKey = lookupDrafts [draftKey] >>= \case
   [ Draft{..} ] -> 
     if draftAuthor == userID 
@@ -45,13 +43,7 @@ draftAuthorCheck reasonPrefix userID draftKey = lookupDrafts [draftKey] >>= \cas
                          <> ": Could not find draft with key " 
                          <> unpack (getKey draftKey) }
 
-draftExistsCheck 
-  :: ( MonadIO m
-     , MonadError ServerError m
-     , MonadCatch m
-     ) => String 
-       -> Key Draft 
-       -> DatabaseT m ()
+draftExistsCheck :: MonadGeopolitik m => String -> Key Draft -> m ()
 draftExistsCheck reasonPrefix draftKey = lookupDrafts [draftKey] >>= \case
   [ Draft{..} ] -> return ()
   _ -> throwError err404 
@@ -59,13 +51,7 @@ draftExistsCheck reasonPrefix draftKey = lookupDrafts [draftKey] >>= \case
                      <> ": Could not find draft with key " 
                      <> unpack (getKey draftKey) }
 
-draftAuth 
-  :: ( MonadError ServerError m
-     , MonadIO m 
-     , MonadCatch m ) 
-     => User 
-     -> Key Article 
-     -> DatabaseT m ()
+draftAuth :: MonadGeopolitik m => User -> Key Article -> m ()
 draftAuth User{..} article = lookupArticles [article] >>= \case
   [ Article{..} ] ->  
     isCollaborator userID article >>= \case
@@ -79,11 +65,7 @@ draftAuth User{..} article = lookupArticles [article] >>= \case
   _ -> throwError err500
     { errReasonPhrase = "Invalid database state: draftAuth (B)" }
 
-collaboratorAuth 
-  :: ( MonadError ServerError m
-     , MonadIO m
-     , MonadCatch m )
-     => Key User -> Key Article -> DatabaseT m ()
+collaboratorAuth :: MonadGeopolitik m => Key User -> Key Article -> m ()
 collaboratorAuth user article = lookupArticles [article] >>= \case
   [ Article{..} ] -> 
     if articleOwner == user 
