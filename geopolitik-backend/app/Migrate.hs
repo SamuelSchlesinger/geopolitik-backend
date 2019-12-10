@@ -19,7 +19,7 @@ main = do
   username <- getEffectiveUserName
   runDatabaseT (testInfo username) do
     geopolitikLocation <- liftIO $ getEnv "GEOPOLITIK_LOCATION"
-    migrations <- lines <$> liftIO (readFile (geopolitikLocation <> "/geopolitik/migrations/manifest"))
+    migrations <- lines <$> liftIO (readFile (geopolitikLocation <> "/migrations/manifest"))
     executedMigrations <- catch (lookupExecutedMigrations migrations) (\(_ :: SomeException) -> return [])
     let migrationsToRun = migrations \\ map executedMigrationFilePath executedMigrations
     forM_ migrationsToRun runMigration
@@ -28,7 +28,7 @@ runMigration :: FilePath -> DatabaseT IO ()
 runMigration filepath = do
   liftIO $ putStrLn $ "Running migration " <> filepath
   fileLocation <- 
-    (<> "/geopolitik/migrations/" <> filepath) 
+    (<> "/migrations/" <> filepath) 
       <$> liftIO (getEnv "GEOPOLITIK_LOCATION")
   q :: Query <- fromString <$> liftIO (readFile fileLocation)
   c <- ask
