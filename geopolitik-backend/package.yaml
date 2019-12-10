@@ -1,6 +1,6 @@
 _common: !include "../shared.yaml"
 
-name: geopolitik
+name: geopolitik-backend
 <<: *common
 
 dependencies:
@@ -37,17 +37,17 @@ library:
   <<: *library
 
 executables:
-  geopolitik:
+  geopolitik-backend:
     main: 'app/Entry.hs'
     dependencies:
-      - geopolitik
+      - geopolitik-backend
     <<: *executable
   drop:
     main: 'app/Drop.hs'
     dependencies:
       - base
       - exceptions
-      - geopolitik
+      - geopolitik-backend
       - mtl
       - postgresql-simple
       - time
@@ -59,7 +59,7 @@ executables:
     dependencies:
       - base
       - exceptions
-      - geopolitik
+      - geopolitik-backend
       - mtl
       - postgresql-simple
       - time
@@ -72,7 +72,7 @@ executables:
       - base
       - bytestring
       - cookie
-      - geopolitik
+      - geopolitik-backend
       - lens
       - mtl
       - servant-client
@@ -87,5 +87,5 @@ tests:
     main: Test.hs
     source-dirs: test
     dependencies:
-      - geopolitik
+      - geopolitik-backend
     <<: *test
