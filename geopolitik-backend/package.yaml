@@ -19,6 +19,7 @@ library:
     - exceptions
     - geojson
     - mtl
+    - http-api-data
     - optparse-applicative
     - postgresql-simple
     - random

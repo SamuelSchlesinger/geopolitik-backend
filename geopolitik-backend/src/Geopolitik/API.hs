@@ -12,6 +12,7 @@ import Servant
 import Servant.Server.Experimental.Auth
 import Web.Cookie
 import qualified Network.Wai as Wai
+import Web.FormUrlEncoded
 
 type GeopolitikAPI
      = "account" :> AccountAPI 
@@ -19,27 +20,27 @@ type GeopolitikAPI
   :<|> Raw
 
 type AccountAPI
-     = "signup" :> P SignUp 
-  :<|> "signin" :> C SignIn 
+     = "signup" :> F SignUp (Response SignUp)
+  :<|> "signin" :> F SignIn (H (Response SignIn)) 
   :<|> AuthProtect "geopolitik-user" :> ("new-token" :> S (Response SignIn))
 
 type ArticleAPI
    = AuthProtect "geopolitik-user" :> UnauthenticatedArticleAPI 
 
 type UnauthenticatedArticleAPI
-    = "new" :> P NewArticle
+    = "new" :> J NewArticle
  :<|> "draft" :> DraftAPI
  :<|> "collaborator" :> CollaboratorAPI 
 
 type DraftAPI
-     = "new" :> P NewDraft
+     = "new" :> J NewDraft
   :<|> "comments" :> G "draft-key" DraftComments 
-  :<|> "link" :> P LinkDraft 
+  :<|> "link" :> J LinkDraft 
   :<|> "latest" :> G "article-key" LatestDraft 
   :<|> Capture "username" Text :> Capture "article-name" Text :> Get '[JSON] (Response LatestDraft)
 
 type CollaboratorAPI
-    = "add" :> P AddCollaborator
+    = "add" :> J AddCollaborator
 
 type Ctx = AuthHandler Wai.Request User ': '[]
 
@@ -50,7 +51,9 @@ type family Request b where
 
 type instance AuthServerData (AuthProtect "geopolitik-user") = User
 
-type P req = ReqBody '[JSON] req :> Post '[JSON] (Response req)
+type F req res = ReqBody '[FormUrlEncoded] req :> Post '[JSON] res
+
+type J req = ReqBody '[JSON] req :> Post '[JSON] (Response req)
 
 type G t req = Capture t req :> Get '[JSON] (Response req)
 
@@ -67,8 +70,8 @@ type H res
 data SignUp = SignUp
   { signUpUsername :: Text
   , signUpPassword :: Text }
-  deriving  (Eq, Ord, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
+  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON, ToForm, FromForm)
 
 data instance Response SignUp = SignedUp
   deriving stock (Eq, Ord, Show, Read, Generic)
@@ -78,7 +81,7 @@ data SignIn = SignIn
   { signInUsername :: Text
   , signInPassword :: Text }
   deriving  (Eq, Ord, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
+  deriving anyclass (FromJSON, ToJSON, ToForm, FromForm)
 
 data instance Response SignIn = SignedIn Text
   deriving stock (Eq, Ord, Show, Read, Generic)
