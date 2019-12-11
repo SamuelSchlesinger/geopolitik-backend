@@ -6,9 +6,7 @@ import Data.Time.Clock
 import Data.UUID
 import Geopolitik.API
 import Geopolitik.Database
-import Geopolitik.Ontology.User
-import Geopolitik.Ontology.Session
-import Geopolitik.Ontology.Key
+import Geopolitik.Ontology
 import Geopolitik.Monad
 import Servant
 import System.Random

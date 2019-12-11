@@ -10,13 +10,7 @@ import Geopolitik.API
 import Geopolitik.Auth
 import Geopolitik.Database
 import Geopolitik.Monad
-import Geopolitik.Ontology.Article
-import Geopolitik.Ontology.Collaborator
-import Geopolitik.Ontology.Draft
-import Geopolitik.Ontology.Key
-import Geopolitik.Ontology.Link
-import Geopolitik.Ontology.Tag
-import Geopolitik.Ontology.User
+import Geopolitik.Ontology
 import Servant
 import System.Random
 
