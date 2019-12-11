@@ -54,7 +54,7 @@ draftExistsCheck reasonPrefix draftKey = lookupDrafts [draftKey] >>= \case
 draftAuth :: MonadGeopolitik m => User -> Key Article -> m ()
 draftAuth User{..} article = lookupArticles [article] >>= \case
   [ Article{..} ] ->  
-    isCollaborator userID article >>= \case
+    isCollaborator' userID article >>= \case
       Just True -> return ()
       Just False -> throwError err403
         { errReasonPhrase = "User is not a collaborator on this article" }

@@ -106,8 +106,8 @@ insertLocation Location{locationSpot = Coordinate x y, ..} = withConnection \c -
     values (?, ?, ?, |] <> fromString ("'POINT(" <> show x <> " " <> show y <> ")'") <> [sql|, ?)
   |]) (locationID, locationName, locationDescription, locationCreationDate)
 
-isCollaborator :: MonadDatabase m => Key User -> Key Article -> m (Maybe Bool)
-isCollaborator collaborator article = withConnection \c -> do
+isCollaborator' :: MonadDatabase m => Key User -> Key Article -> m (Maybe Bool)
+isCollaborator' collaborator article = withConnection \c -> do
   liftIO $ query c [sql|
     select * from collaborators where collaborator = ? and article = ?;
   |] (collaborator, article) >>= \case
