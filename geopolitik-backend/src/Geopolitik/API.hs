@@ -11,8 +11,8 @@ import Geopolitik.Ontology
 import Servant
 import Servant.Server.Experimental.Auth
 import Web.Cookie
-import qualified Network.Wai as Wai
 import Web.FormUrlEncoded
+import qualified Network.Wai as Wai
 
 type GeopolitikAPI
      = "account" :> AccountAPI 

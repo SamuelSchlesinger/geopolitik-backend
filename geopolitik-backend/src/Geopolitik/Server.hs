@@ -4,14 +4,14 @@ import Control.Monad.Except
 import Database.PostgreSQL.Simple hiding ((:.))
 import Geopolitik.API
 import Geopolitik.Database
-import Geopolitik.Ontology
 import Geopolitik.Monad
+import Geopolitik.Ontology
+import Geopolitik.Server.Account
+import Geopolitik.Server.Article
 import Servant
 import Servant.Server.Experimental.Auth
 import Web.Cookie
 import qualified Network.Wai as Wai
-import Geopolitik.Server.Account
-import Geopolitik.Server.Article
 
 geopolitikProxy :: Proxy GeopolitikAPI
 geopolitikProxy = Proxy

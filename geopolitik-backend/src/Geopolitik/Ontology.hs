@@ -1,22 +1,22 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 module Geopolitik.Ontology 
-  ( Key(..)
-  , User(..)
-  , Article(..)
-  , Draft(..)
-  , Session(..)
-  , ExecutedMigration(..)
-  , Location(..)
-  , Coordinate(..)
-  , Comment(..)
+  ( Article(..)
   , Collaborator(..)
-  , Tag(..)
+  , Comment(..)
+  , Coordinate(..)
+  , Draft(..)
+  , ExecutedMigration(..)
+  , Key(..)
+  , Link(..)
+  , Location(..)
+  , Session(..)
   , SomeTag(..)
+  , Tag(..)
+  , User(..)
   , allTags 
   , obscure
   , obvious
-  , Link(..)
   ) where
 
 import Geopolitik.Ontology.Key

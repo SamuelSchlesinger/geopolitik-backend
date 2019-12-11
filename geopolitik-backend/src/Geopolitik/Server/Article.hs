@@ -9,14 +9,14 @@ import Database.PostgreSQL.Simple.SqlQQ
 import Geopolitik.API
 import Geopolitik.Auth
 import Geopolitik.Database
-import Geopolitik.Ontology.User
+import Geopolitik.Monad
 import Geopolitik.Ontology.Article
-import Geopolitik.Ontology.Tag
-import Geopolitik.Ontology.Link
+import Geopolitik.Ontology.Collaborator
 import Geopolitik.Ontology.Draft
 import Geopolitik.Ontology.Key
-import Geopolitik.Ontology.Collaborator
-import Geopolitik.Monad
+import Geopolitik.Ontology.Link
+import Geopolitik.Ontology.Tag
+import Geopolitik.Ontology.User
 import Servant
 import System.Random
 
@@ -73,7 +73,6 @@ latest _ (LatestDraft articleKey) =
   latestDraft articleKey >>= \case
     Just Draft {..} -> return $ LatestDraftFound draftID draftAuthor draftContents draftCreationDate
     Nothing -> throwError err404
-      { errReasonPhrase = "Latest draft not found" }
 
 latest' :: MonadGeopolitik m => User -> Text -> Text -> m (Response LatestDraft)
 latest' _ username articleName =
@@ -82,7 +81,6 @@ latest' _ username articleName =
       return $
       LatestDraftFound draftID draftAuthor draftContents draftCreationDate
     Nothing -> throwError err404
-      { errReasonPhrase = "Latest draft not found" }
 
 collaborator :: MonadGeopolitik m => User -> ServerT CollaboratorAPI m
 collaborator user = addCollaborator user
@@ -97,6 +95,4 @@ addCollaborator User{..} AddCollaborator{..} = do
       insertCollaborators [Collaborator collaboratorID addCollaboratorArticle collaboratorUserID creationDate ]
       return AddedCollaborator
     [] -> throwError err404
-      { errReasonPhrase = "User does not exist" }
     _ -> throwError err500
-      { errReasonPhrase = "Database is in an invalid state: addCollaborator" }

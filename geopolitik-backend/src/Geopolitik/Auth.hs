@@ -3,8 +3,8 @@ module Geopolitik.Auth (linkAuth, draftAuth, collaboratorAuth) where
 import Control.Monad.Except
 import Data.Text (unpack)
 import Geopolitik.Database
-import Geopolitik.Ontology
 import Geopolitik.Monad
+import Geopolitik.Ontology
 import Servant
 
 exists :: MonadGeopolitik m => Tag a -> Key a -> m ()

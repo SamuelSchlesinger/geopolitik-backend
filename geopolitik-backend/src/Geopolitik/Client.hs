@@ -1,11 +1,11 @@
 module Geopolitik.Client
-  ( signin
-  , signup
-  , newToken
-  , articleClient
-  , ArticleClient(..)
+  ( ArticleClient(..)
   , CollaboratorClient(..)
   , DraftClient(..)
+  , articleClient
+  , newToken
+  , signin
+  , signup
   ) where
 
 import Data.Proxy
