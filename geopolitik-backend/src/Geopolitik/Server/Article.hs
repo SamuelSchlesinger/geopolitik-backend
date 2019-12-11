@@ -9,7 +9,13 @@ import Database.PostgreSQL.Simple.SqlQQ
 import Geopolitik.API
 import Geopolitik.Auth
 import Geopolitik.Database
-import Geopolitik.Ontology
+import Geopolitik.Ontology.User
+import Geopolitik.Ontology.Article
+import Geopolitik.Ontology.Tag
+import Geopolitik.Ontology.Link
+import Geopolitik.Ontology.Draft
+import Geopolitik.Ontology.Key
+import Geopolitik.Ontology.Collaborator
 import Geopolitik.Monad
 import Servant
 import System.Random
