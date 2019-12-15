@@ -8,6 +8,8 @@ import Database.PostgreSQL.Simple hiding ((:.))
 import Database.PostgreSQL.Simple.SqlQQ
 import Geopolitik.API
 import Geopolitik.Auth
+import Geopolitik.Auth.CanLink
+import Geopolitik.Auth.Named
 import Geopolitik.Database
 import Geopolitik.Monad
 import Geopolitik.Ontology
@@ -27,13 +29,16 @@ newArticle User {userID = articleOwner} (NewArticle articleName) = do
   return (ArticleCreated articleID)
 
 link :: MonadGeopolitik m => User -> LinkDraft -> m (Response LinkDraft)
-link u@User {..} (LinkDraft linkDraft (SomeTag tag) linkEntity) = do
-  linkAuth u tag linkDraft (obvious tag linkEntity)
+link u (LinkDraft linkDraft (SomeTag tag) linkEntity) 
+  = linkable u tag linkDraft (obvious tag linkEntity) >>= link'
+
+link' :: MonadGeopolitik m => Linkable -> m (Response LinkDraft)
+link' (Linkable (anon -> User {..}) tag (anon -> linkDraft) (obscure . anon -> linkEntity) _) = do
   linkCreationDate <- liftIO getCurrentTime
   linkID <- liftIO ((Key . toText) <$> randomIO)
   let linkTag = SomeTag tag
   insertLinks [Link {..}]
-  return Linked
+  return Linked 
 
 draft :: MonadGeopolitik m => User -> ServerT DraftAPI m
 draft user =
