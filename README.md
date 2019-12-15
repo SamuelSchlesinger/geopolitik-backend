@@ -2,17 +2,21 @@
 
 Geopolitik is a website for people to publish their articles on topics
 relating to geopolitics. This can include news, culture, sports, economics,
-business, geography.
+business, geography. This repository contains an incomplete implementation 
+of the backend for this, though there is an Elm project in here that is waiting
+for any awesome contributor to come use the APIs I wrote and make a front end.
 
 ## Installing/Running
 
 To run this on any unix machine, you need to have PostgreSQL 
 running locally on port 5432 with a database called "geopolitik", and you need to have the 
 PostGIS extension installed, both of which are available via brew.
+To begin, run the commands:
 ```bash
 export GEOPOLITIK_LOCATION=<this-folder>
 stack run migrate
 ```
+I have the former in my bash profile.
 If you want to drop the various tables that this adds to that postgres database, you can run this script
 and get rid of them all. 
 ```bash
