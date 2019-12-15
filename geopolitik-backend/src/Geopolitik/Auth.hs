@@ -1,4 +1,4 @@
-module Geopolitik.Auth (linkAuth, draftAuth, collaboratorAuth) where
+module Geopolitik.Auth (draftAuth, collaboratorAuth, linkable, Linkable(..)) where
 
 import Control.Monad.Except
 import Geopolitik.Database
@@ -8,11 +8,6 @@ import Servant
 import Geopolitik.Auth.Named
 import Geopolitik.Auth.CanLink
 import Geopolitik.Auth.IsOwner
-
-linkAuth :: MonadGeopolitik m => User -> Tag a -> Key Draft -> Key a -> m () 
-linkAuth user@User{..} tag draftKey entity 
-  = named user \u -> named draftKey \d -> named entity \e -> () <$ canLink u tag d e
-
 
 draftAuth :: MonadGeopolitik m => User -> Key Article -> m ()
 draftAuth User{..} article = lookupArticles [article] >>= \case

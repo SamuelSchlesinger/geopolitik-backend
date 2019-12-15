@@ -8,7 +8,6 @@ import Database.PostgreSQL.Simple hiding ((:.))
 import Database.PostgreSQL.Simple.SqlQQ
 import Geopolitik.API
 import Geopolitik.Auth
-import Geopolitik.Auth.CanLink
 import Geopolitik.Auth.Named
 import Geopolitik.Database
 import Geopolitik.Monad
