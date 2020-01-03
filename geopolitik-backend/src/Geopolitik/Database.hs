@@ -156,6 +156,20 @@ lookupArticleByName User{..} articleName = withConnection \c -> do
     [a] -> return (Just a)
     _ -> return Nothing
 
+isExpert :: MonadDatabase m => Key User -> Key Expertise -> m Bool
+isExpert user expertise = withConnection \c -> do
+  liftIO $ query c [sql|
+    select (experts.expert, experts.expertise) from experts
+    inner join expertises on expertises.id = ? 
+    inner join users on users.id = ?
+    where expertises.id = experts.expertise
+      and users.id = experts.expert;
+  |] (expertise, user) >>= \case
+    [(_ :: Key User, _ :: Key Expertise)] -> return True
+    [] -> return False
+    _ -> return False
+
+
 lookupExecutedMigrations :: MonadDatabase m => [FilePath] -> m [ExecutedMigration]
 lookupExecutedMigrations names = withConnection \c -> do
   liftIO $ query c [sql|
@@ -187,7 +201,19 @@ lookupEntities tag ks = case tag of
   CommentTag -> lookupComments ks
   DraftTag -> lookupDrafts ks 
   LocationTag -> lookupLocations ks
-  
+  ExpertiseTag -> lookupExpertises ks
+
+lookupExpertises :: MonadDatabase m => [Key Expertise] -> m [Expertise]
+lookupExpertises expertises = withConnection \c -> do
+  liftIO $ query c [sql|
+    select * from expertises where id in ?;
+    |] (Only (In expertises))
+
+expertsIn :: MonadDatabase m => Key Expertise -> m [Key User]
+expertsIn expertise = withConnection \c -> do
+  fmap (fmap fromOnly) $ liftIO $ query c [sql|
+    select experts.expert from experts where experts.expertise = ?;
+    |] [expertise]
 
 latestDraft :: MonadDatabase m => Key Article -> m (Maybe Draft)
 latestDraft article = withConnection \c -> do
@@ -242,5 +268,4 @@ withTestUsers users dbGo = bracket (insertUsers users) (const . void $ deleteUse
 
 withTestArticles :: (MonadDatabase m, MonadMask m) => [Article] -> ([Key Article] -> m a) -> m a
 withTestArticles articles dbGo = bracket (insertArticles articles) (const $ deleteArticles articleKeys) (const $ dbGo articleKeys) where
-  articleKeys = map articleID articles
-  
+  articleKeys = map articleID articles 

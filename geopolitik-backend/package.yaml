@@ -25,6 +25,7 @@ library:
     - random
     - servant-client
     - servant-client-core
+    - servant-js
     - servant-server
     - text
     - time

@@ -8,3 +8,4 @@ postgis.sql
 locations.sql
 comments.sql
 collaborators.sql
+experts.sql

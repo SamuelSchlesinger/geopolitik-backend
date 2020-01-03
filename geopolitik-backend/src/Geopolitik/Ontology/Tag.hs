@@ -9,6 +9,7 @@ import Geopolitik.Ontology.User
 import Geopolitik.Ontology.Comment
 import Geopolitik.Ontology.Location
 import Geopolitik.Ontology.Draft
+import Geopolitik.Ontology.Expertise
 import Data.Void
 import Data.Text
 
@@ -18,6 +19,7 @@ data Tag a where
   CommentTag :: Tag Comment
   LocationTag :: Tag Location
   DraftTag :: Tag Draft
+  ExpertiseTag :: Tag Expertise
 
 deriving instance Eq (Tag a)
 deriving instance Ord (Tag a)

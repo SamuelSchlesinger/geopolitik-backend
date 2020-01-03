@@ -7,6 +7,8 @@ module Geopolitik.Ontology
   , Coordinate(..)
   , Draft(..)
   , ExecutedMigration(..)
+  , Expert(..)
+  , Expertise(..)
   , Key(..)
   , Link(..)
   , Location(..)
@@ -30,4 +32,5 @@ import Geopolitik.Ontology.Comment
 import Geopolitik.Ontology.Collaborator
 import Geopolitik.Ontology.Tag
 import Geopolitik.Ontology.Link
-
+import Geopolitik.Ontology.Expertise
+import Geopolitik.Ontology.Expert
